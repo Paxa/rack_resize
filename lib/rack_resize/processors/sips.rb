@@ -1,9 +1,11 @@
-require "open3"
 require "shellwords"
 
-class LocalCdnCgi::SipsProcessor
+class RackResize::Processors::Sips
+
   def resize(source_file:, target_width:, target_height:, target_file: nil)
-    args = ["sips"]
+    # args = ["sips", "--deleteColorManagementProperties", "--optimizeColorForSharing"]
+    args = ["sips", "--deleteColorManagementProperties", "--debug"]
+    args += ["-s formatOptions", RackResize.config.default_quality]
     args << "--resampleWidth" << target_width.to_i if target_width
     args << "--resampleHeight" << target_height.to_i if target_height
 
@@ -16,16 +18,11 @@ class LocalCdnCgi::SipsProcessor
 
     args << Shellwords.escape(source_file)
 
-    # sips -Z 1200 input.jpg
-
     pp [:args, args, args.join(" ")]
 
-    p `#{args.join(" ")}`
+    result = `#{args.join(" ")}`
 
-    # stdout, stderr, status = Open3.capture3(args)
-    # puts "stdout: #{stdout}"
-    # puts "stderr: #{stderr}"
-    # puts "status: #{status}"
+    puts "sips command result: #{result}"
 
     unless target_file
       begin

@@ -1,7 +1,7 @@
 require 'pathname'
 
-class LocalCdnCgi::Configuration
-  PROCESSORS = %i[sips vips mini_magick].freeze
+class RackResize::Configuration
+  PROCESSORS = %i[sips vips mini_magick imlib2].freeze
 
   attr_reader :processor
   attr_accessor :save_resized, :default_quality, :cache_folder, :assets_folder
@@ -16,7 +16,7 @@ class LocalCdnCgi::Configuration
     @assets_folder   = options[:assets_folder] ? Pathname.new(options[:assets_folder]) : nil
 
     if defined?(Rails)
-      @cache_folder ||= Rails.root.join('tmp', 'cdn_cgi_cache')
+      @cache_folder ||= Rails.root.join('tmp', 'rack_resize_cache')
       @assets_folder ||= Rails.root.join('app', 'assets', 'images')
     end
 
@@ -36,11 +36,12 @@ class LocalCdnCgi::Configuration
 
   def processor_instance
     @processor_instance ||= case @processor
-                            when :mini_magick then LocalCdnCgi::MiniMagicProcessor.new
-                            when :vips        then LocalCdnCgi::VipsProcessor.new
-                            when :sips        then LocalCdnCgi::SipsProcessor.new
+                            when :mini_magick then RackResize::MiniMagick.new
+                            when :vips        then RackResize::Processors::Vips.new
+                            when :sips        then RackResize::Processors::Sips.new
+                            when :imlib2      then RackResize::Processors::Imlib2.new
                             else
-                              raise "LocalCdnCgi - Unknow image processor #{@processor.inspect}"
+                              raise "RackResize - Unknow image processor #{@processor.inspect}"
                             end
   end
 end
