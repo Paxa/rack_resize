@@ -1,7 +1,7 @@
-require_relative "lib/local_cdn_cgi"
+require_relative "lib/rack_resize"
 require "rack/static"
 
-use LocalCdnCgi::RackApp, processor: :vips, save_resized: false, assets_folder: "samples"
+use RackResize::RackApp, processor: :imlib2, assets_folder: "samples" # save_resized: false,
 
 use Rack::Static, urls: [""], root: "samples", index: "index.html"
 
