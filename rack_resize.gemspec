@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.license     = 'MIT'
   s.required_ruby_version = ['>= 3.0']
 
-  s.files       = `git ls-files`.split("\n")
+  s.files       = `git ls-files`.split("\n").delete_if{|f| f.start_with?('samples', 'test') }
   s.test_files  = []
 
   s.require_paths = ["lib"]
