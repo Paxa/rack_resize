@@ -1,3 +1,5 @@
+require 'digest'
+
 class RackResize::Processing
   attr_reader :config
 

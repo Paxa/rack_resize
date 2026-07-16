@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'rack'
 
 class RackResize::RackApp
@@ -20,33 +18,36 @@ class RackResize::RackApp
     request = Rack::Request.new(env)
     fullpath = request.path_info
 
-    unless fullpath.start_with?(@cf_path_prefix)
-      return @app.call(env)
+    RackResize::InputParsers::Cloudflare.parse_input(fullpath, cf_path_prefix: @cf_path_prefix) =>
+      {route_matched:, req_params:, asset_path:}
+
+    return @app.call(env) unless route_matched
+    return error_resp("can't parse file path") unless asset_path
+
+    has_matched = false
+    asset_file = nil
+    config.assets_folders.each do |prefix, folder|
+      if asset_path.start_with?(prefix)
+        asset_file = folder.join(asset_path.delete_prefix(prefix + (prefix.end_with?("/") ? "" : "/")))
+        if asset_file.expand_path.to_s.start_with?(folder.to_s)
+          has_matched = true
+        end
+        break
+      end
     end
 
-    # process string like this
-    # /cdn-cgi/image/width=426,format=auto/assets/templates/vancouver-27c47f55.jpg
-
-    fullpath = fullpath.delete_prefix("/cdn-cgi").delete_prefix("/image").delete_prefix("/")
-    file_path_match = fullpath.match(%r{(?<params>[^\/]+)(?<file>\/.+?)(-[\da-f]{8})?(?<ext>\.\w{2,})$})
-
-    return error_resp("can't parse file path") unless file_path_match
-
-    req_params = file_path_match[:params].split(",").map {|s| s.split("=") }.to_h.transform_keys(&:to_sym)
-    asset_path = "#{file_path_match[:file]}#{file_path_match[:ext]}"
-
-    if defined?(Rails)
-      asset_path = asset_path.delete_prefix("/assets/")
-    else
-      asset_path = asset_path.delete_prefix("/#{config.assets_folder}/")
+    if asset_path.include?("..")
+      @processing.logger.info("RackResize::RackApp - File path has invalid byte sequence #{asset_path}")
+      return error_resp(".. is not allowed in image path")
     end
-
-    asset_file = config.assets_folder.join(asset_path.sub(%r{^/assets/}, ''))
-
-    return error_resp(".. is not allowed in image path") if asset_path.include?("..")
-
-    return error_resp("invalid file path") unless asset_file.to_s.start_with?(config.assets_folder.to_s)
-    return error_resp("file not exists on a server") unless asset_file.exist?
+    unless has_matched
+      @processing.logger.info("RackResize::RackApp - requested file #{asset_path} not match any of configured assets folder #{config.assets_folders.keys}")
+      return error_resp("invalid file path")
+    end
+    unless asset_file.exist?
+      @processing.logger.info("RackResize::RackApp - File path fond #{asset_path} => #{asset_file}")
+      return error_resp("file not exists on a server")
+    end
 
     file_content = @processing.process!(source_file: asset_file, req_params:)
     return send_file(asset_file:, file_content:)

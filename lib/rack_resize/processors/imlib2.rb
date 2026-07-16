@@ -11,7 +11,6 @@ class RackResize::Processors::Imlib2
     image.resize!(target_width || :auto, target_height || :auto) if target_width || target_height
 
     if target_file
-      image.call(destination: target_file)
       image.save(target_file)
     else
       image.save_data(format: source_file.to_s =~ /\.png$/ ? :png : :jpeg)

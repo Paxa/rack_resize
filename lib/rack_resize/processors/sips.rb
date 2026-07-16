@@ -1,37 +1,38 @@
-require "shellwords"
+require "open3"
 
 class RackResize::Processors::Sips
 
   def resize(source_file:, target_width:, target_height:, target_file: nil)
-    # args = ["sips", "--deleteColorManagementProperties", "--optimizeColorForSharing"]
-    args = ["sips", "--deleteColorManagementProperties", "--debug"]
-    args += ["-s formatOptions", RackResize.config.default_quality]
-    args << "--resampleWidth" << target_width.to_i if target_width
-    args << "--resampleHeight" << target_height.to_i if target_height
+    args = %w[sips --deleteColorManagementProperties --debug]
+    args += ["-s", "formatOptions", RackResize.config.default_quality.to_s]
+
+    if target_width && target_height
+      info, = Open3.capture2("sips", "-g", "pixelWidth", "-g", "pixelHeight", source_file.to_s)
+      src_w = info[/pixelWidth: (\d+)/, 1]&.to_f
+      src_h = info[/pixelHeight: (\d+)/, 1]&.to_f
+      if src_w && src_h && (target_width.to_f / src_w) <= (target_height.to_f / src_h)
+        args += ["--resampleWidth", target_width.to_i.to_s]
+      else
+        args += ["--resampleHeight", target_height.to_i.to_s]
+      end
+    else
+      args += ["--resampleWidth",  target_width.to_i.to_s]  if target_width
+      args += ["--resampleHeight", target_height.to_i.to_s] if target_height
+    end
 
     if target_file
-      args << "-o" << Shellwords.escape(target_file)
-    else
-      tmp_file = Tempfile.new(["result", File.extname(source_file)])
-      args << "-o" << tmp_file.path
+      Open3.capture2(*args, "-o", target_file.to_s, source_file.to_s)
+      return nil
     end
 
-    args << Shellwords.escape(source_file)
-
-    pp [:args, args, args.join(" ")]
-
-    result = `#{args.join(" ")}`
-
-    puts "sips command result: #{result}"
-
-    unless target_file
-      begin
-        return File.open(tmp_file.path, 'rb', &:read)
-      ensure
-        tmp_file.unlink
-      end
+    tmp = Tempfile.new(["result", File.extname(source_file)])
+    tmp_path = tmp.path || raise("tempfile has no path")
+    begin
+      Open3.capture2(*args, "-o", tmp_path, source_file.to_s)
+      File.binread(tmp_path)
+    ensure
+      tmp.close
+      tmp.unlink
     end
-
-    nil
   end
 end

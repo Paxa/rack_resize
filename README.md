@@ -32,7 +32,7 @@ Fastly and bunny.net: (tbd)
 
 ```ruby
 RackResize.configure do |config|
-  config.assets_folder      = Rails.root.join('app', 'assets', 'images')
+  config.assets_folders     = { "assets" => Rails.root.join('app', 'assets', 'images') }
   config.processor          = :sips / :vips / :mini_magick / :imlib2
   config.default_quality    = 95
   config.save_resized       = false

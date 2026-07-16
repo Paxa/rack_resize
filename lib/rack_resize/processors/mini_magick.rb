@@ -45,9 +45,3 @@ class RackResize::Processors::MiniMagick
     image&.destroy!
   end
 end
-
-# magick /Users/pavel/Work/resume-io/app/assets/images/templates/vancouver.jpg -auto-orient -resize 426.0x> -quality 95 /Users/pavel/Work/resume-io/tmp/cdn_cgi_cache/60f2727cce350874040b321219f05766.jpg
-
-
-# magick mogrify -resize 426.0x> /var/folders/n9/b__lxh7j1_xcwg4k_8j2_39m0000gp/T/mini_magick20260709-58478-qowydk.jpg
-# magick mogrify -quality 95 /var/folders/n9/b__lxh7j1_xcwg4k_8j2_39m0000gp/T/mini_magick20260709-58478-qowydk.jpg

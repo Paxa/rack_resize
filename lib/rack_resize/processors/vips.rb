@@ -11,8 +11,6 @@ class RackResize::Processors::Vips
     image = image.resize_to_limit(target_width, target_height) if target_width || target_height
     image = image.saver(quality: RackResize.config.default_quality)
 
-    # image.call(destination: target_file)
-
     if target_file
       image.call(destination: target_file)
     else
