@@ -7,6 +7,8 @@ gem 'mini_magick'
 gem 'ruby-vips'
 gem 'rszr'
 
+gem 'railties'
+
 gem 'minitest'
 gem 'minitest-reporters'
 gem 'rake'

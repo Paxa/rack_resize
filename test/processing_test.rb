@@ -14,8 +14,8 @@ describe RackResize::Processing do
   after  { FileUtils.rm_rf(@tmpdir) }
 
   it 'returns a StringIO' do
-    _(processing(:imlib2).process!(source_file: SAMPLE_JPEG, req_params: {}))
-      .must_be_kind_of StringIO
+    assert_kind_of StringIO,
+      processing(:imlib2).process!(source_file: SAMPLE_JPEG, req_params: {})
   end
 
   describe 'req_params' do
@@ -39,7 +39,7 @@ describe RackResize::Processing do
       io = RackResize::Processing.new(config: config)
                .process!(source_file: SAMPLE_JPEG, req_params: {width: '99999'})
       w, = read_dimensions_from(io)
-      _(w).must_be :<=, 100
+      assert_operator w, :<=, 100
     end
 
     it 'clamps height to max_dimension' do
@@ -47,7 +47,7 @@ describe RackResize::Processing do
       io = RackResize::Processing.new(config: config)
                .process!(source_file: SAMPLE_JPEG, req_params: {height: '99999'})
       _, h = read_dimensions_from(io)
-      _(h).must_be :<=, 100
+      assert_operator h, :<=, 100
     end
 
     it 'clamps dpr to avoid multiplication overflow' do
@@ -55,7 +55,7 @@ describe RackResize::Processing do
       io = RackResize::Processing.new(config: config)
                .process!(source_file: SAMPLE_JPEG, req_params: {width: '10', dpr: '99999'})
       w, = read_dimensions_from(io)
-      _(w).must_be :<=, 200
+      assert_operator w, :<=, 200
     end
   end
 
@@ -67,8 +67,8 @@ describe RackResize::Processing do
                .process!(source_file: SAMPLE_JPEG, req_params: {width: '150'})
       r2 = RackResize::Processing.new(config: config)
                .process!(source_file: SAMPLE_JPEG, req_params: {width: '150'})
-      _(r1.read).must_equal r2.read
-      _(cache.glob('**/*').count(&:file?)).must_equal 1
+      assert_equal r2.read, r1.read
+      assert_equal 1, cache.glob('**/*').count(&:file?)
     end
   end
 
@@ -547,8 +547,8 @@ describe RackResize::Processing do
       f.flush
       f.close
       w, h = read_dimensions(f.path)
-      _(w).must_equal expected_w, 'width mismatch'
-      _(h).must_equal expected_h, 'height mismatch'
+      assert_equal expected_w, w, 'width mismatch'
+      assert_equal expected_h, h, 'height mismatch'
     end
   end
 

@@ -4,7 +4,7 @@ class RackResize::Configuration
   PROCESSORS = %i[sips vips mini_magick imlib2].freeze
 
   attr_reader :processor, :assets_folders
-  attr_accessor :save_resized, :default_quality, :cache_folder, :http_cache_max_age, :max_dimension
+  attr_accessor :save_resized, :default_quality, :cache_folder, :http_cache_max_age, :max_dimension, :logger
 
   alias_method :save_resized?, :save_resized
 
@@ -15,15 +15,18 @@ class RackResize::Configuration
     @cache_folder       = options[:cache_folder]
     @http_cache_max_age = options[:http_cache_max_age] || 86400 # 1 day
     @max_dimension      = options[:max_dimension] || 4000
+    @logger             = options[:logger]
 
     self.assets_folders = options[:assets_folders] if options[:assets_folders]
 
-    if defined?(Rails)
+    if defined?(Rails) && Rails.respond_to?(:root) && Rails.root
       @cache_folder ||= Rails.root.join('tmp', 'rack_resize_cache')
-      self.assets_folders = {
-        "assets"  => Rails.root.join("app/assets/images"),
-        "uploads" => Rails.root.join("public/uploads"),
-      }
+      unless options.key?(:assets_folders)
+        self.assets_folders = {
+          "assets"  => Rails.root.join("app/assets/images"),
+          "uploads" => Rails.root.join("public/uploads"),
+        }
+      end
       unless options.key?(:save_resized)
         @save_resized = true
       end

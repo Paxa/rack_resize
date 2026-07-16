@@ -42,13 +42,8 @@ class RackResize::Processing
   end
 
   def logger
-    @logger ||= begin
-                  if defined?(Rails) && Rails.logger
-                    Rails.logger
-                  else
-                    require 'logger'
-                    Logger.new(STDOUT)
-                  end
-                end
+    config.logger ||
+      (defined?(Rails) && Rails.respond_to?(:logger) && Rails.logger) ||
+      (require('logger') && Logger.new(STDOUT))
   end
 end
