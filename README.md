@@ -32,11 +32,12 @@ Fastly and bunny.net: (tbd)
 
 ```ruby
 RackResize.configure do |config|
-  config.assets_folder   = Rails.root.join('app', 'assets', 'images')
-  config.processor       = :sips / :vips / :mini_magick / :imlib2
-  config.default_quality = 95
-  config.save_resized    = false
-  config.cache_folder    = Rails.root.join('tmp', 'rack_resize_cache') # used if save_resized enabled
+  config.assets_folder      = Rails.root.join('app', 'assets', 'images')
+  config.processor          = :sips / :vips / :mini_magick / :imlib2
+  config.default_quality    = 95
+  config.save_resized       = false
+  config.cache_folder       = Rails.root.join('tmp', 'rack_resize_cache') # used if save_resized enabled
+  config.http_cache_max_age = 86400
 end
 ```
 

@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = "rack_resize"
-  s.version     = "0.1.0"
+  s.version     = "0.1.1"
   s.author      = ["Pavel Evstigneev"]
   s.email       = ["pavel.evst@gmail.com"]
   s.homepage    = "https://github.com/paxa/rack_resize"
