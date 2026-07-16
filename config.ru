@@ -1,7 +1,13 @@
+#
+# usage:
+#   gem install rackup
+#   rackup
+#
+
 require_relative "lib/rack_resize"
 require "rack/static"
 
-use RackResize::RackApp, processor: :imlib2, assets_folder: "samples" # save_resized: false,
+use RackResize::RackApp, processor: :imlib2, assets_folder: "samples"
 
 use Rack::Static, urls: [""], root: "samples", index: "index.html"
 

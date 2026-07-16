@@ -13,19 +13,19 @@ class RackResize::RackApp
 
     @config = options == {} ? RackResize.config : RackResize::Configuration.new(options)
     @processing = RackResize::Processing.new(config: @config)
-    @path_prefix = options[:path_prefix] || "/cdn-cgi/image"
+    @cf_path_prefix = options[:cf_path_prefix] || "/cdn-cgi/image"
   end
 
   def call(env)
-    # process string like this
-    # /cdn-cgi/image/width=426,format=auto/assets/templates/vancouver-27c47f55.jpg
-
     request = Rack::Request.new(env)
     fullpath = request.path_info
 
-    unless fullpath.start_with?(@path_prefix)
+    unless fullpath.start_with?(@cf_path_prefix)
       return @app.call(env)
     end
+
+    # process string like this
+    # /cdn-cgi/image/width=426,format=auto/assets/templates/vancouver-27c47f55.jpg
 
     fullpath = fullpath.delete_prefix("/cdn-cgi").delete_prefix("/image").delete_prefix("/")
     file_path_match = fullpath.match(%r{(?<params>[^\/]+)(?<file>\/.+?)(-[\da-f]{8})?(?<ext>\.\w{2,})$})
@@ -58,7 +58,6 @@ class RackResize::RackApp
 
   def send_file(asset_file:, file_content: nil)
     content_type = Rack::Mime.mime_type(File.extname(asset_file), "application/octet-stream")
-    # file = file_path ? File.open(file_path, "rb") : StringIO.new(file_content)
 
     [
       200,
@@ -66,7 +65,7 @@ class RackResize::RackApp
         "content-type"        => content_type,
         "content-length"      => file_content.size.to_s,
         "content-disposition" => "inline",
-        "cache-control"       => "max-age=86400" # 1 day
+        "cache-control"       => "max-age=#{config.http_cache_max_age}" # 1 day
       },
       file_content
     ]
