@@ -16,6 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install package
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libvips42 imagemagick libimlib2
+
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
