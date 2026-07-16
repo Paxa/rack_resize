@@ -26,8 +26,11 @@ class RackResize::Processing
 
   def process_file(source_file:, req_params:, target_file: nil)
     dpr = req_params[:dpr]&.to_f || 1.0
-    target_width = (req_params[:w]&.to_i || req_params[:width]&.to_i)&.*(dpr)
-    target_height = (req_params[:h]&.to_i || req_params[:height]&.to_i)&.*(dpr)
+    dpr = [[dpr, 0.1].max, 10.0].min
+
+    max = config.max_dimension.to_f
+    target_width  = (req_params[:w]&.to_i || req_params[:width]&.to_i)&.*(dpr)&.clamp(1, max)
+    target_height = (req_params[:h]&.to_i || req_params[:height]&.to_i)&.*(dpr)&.clamp(1, max)
 
     start_time = Time.now
     begin

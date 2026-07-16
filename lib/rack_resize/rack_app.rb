@@ -24,6 +24,8 @@ class RackResize::RackApp
     return @app.call(env) unless route_matched
     return error_resp("can't parse file path") unless asset_path
 
+    return error_resp("no assets folders configured") if config.assets_folders.nil? || config.assets_folders.empty?
+
     has_matched = false
     asset_file = nil
     config.assets_folders.each do |prefix, folder|

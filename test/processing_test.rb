@@ -33,6 +33,30 @@ describe RackResize::Processing do
       assert_dimensions processing(:imlib2)
         .process!(source_file: SAMPLE_JPEG, req_params: {width: '75', dpr: '2'}), 150, 200
     end
+
+    it 'clamps width to max_dimension' do
+      config = make_config(:imlib2, max_dimension: 100)
+      io = RackResize::Processing.new(config: config)
+               .process!(source_file: SAMPLE_JPEG, req_params: {width: '99999'})
+      w, = read_dimensions_from(io)
+      _(w).must_be :<=, 100
+    end
+
+    it 'clamps height to max_dimension' do
+      config = make_config(:imlib2, max_dimension: 100)
+      io = RackResize::Processing.new(config: config)
+               .process!(source_file: SAMPLE_JPEG, req_params: {height: '99999'})
+      _, h = read_dimensions_from(io)
+      _(h).must_be :<=, 100
+    end
+
+    it 'clamps dpr to avoid multiplication overflow' do
+      config = make_config(:imlib2, max_dimension: 200)
+      io = RackResize::Processing.new(config: config)
+               .process!(source_file: SAMPLE_JPEG, req_params: {width: '10', dpr: '99999'})
+      w, = read_dimensions_from(io)
+      _(w).must_be :<=, 200
+    end
   end
 
   describe 'save_resized: true' do
@@ -481,8 +505,10 @@ describe RackResize::Processing do
 
   private
 
-  def make_config(processor, save_resized: false, cache_folder: nil)
-    RackResize::Configuration.new(processor: processor, save_resized: save_resized, cache_folder: cache_folder)
+  def make_config(processor, save_resized: false, cache_folder: nil, max_dimension: nil)
+    opts = {processor: processor, save_resized: save_resized, cache_folder: cache_folder}
+    opts[:max_dimension] = max_dimension if max_dimension
+    RackResize::Configuration.new(**opts)
   end
 
   def processing(processor)
@@ -532,5 +558,13 @@ describe RackResize::Processing do
   rescue Rszr::LoadError
     img = MiniMagick::Image.open(path)
     [img.width, img.height]
+  end
+
+  def read_dimensions_from(io, ext: '.jpg')
+    io.rewind
+    Tempfile.create(['dim_check', ext]) do |f|
+      f.binmode; f.write(io.read); f.flush; f.close
+      return read_dimensions(f.path)
+    end
   end
 end

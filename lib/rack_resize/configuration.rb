@@ -4,7 +4,7 @@ class RackResize::Configuration
   PROCESSORS = %i[sips vips mini_magick imlib2].freeze
 
   attr_reader :processor, :assets_folders
-  attr_accessor :save_resized, :default_quality, :cache_folder, :http_cache_max_age
+  attr_accessor :save_resized, :default_quality, :cache_folder, :http_cache_max_age, :max_dimension
 
   alias_method :save_resized?, :save_resized
 
@@ -14,6 +14,7 @@ class RackResize::Configuration
     @default_quality    = options[:default_quality] || 95
     @cache_folder       = options[:cache_folder]
     @http_cache_max_age = options[:http_cache_max_age] || 86400 # 1 day
+    @max_dimension      = options[:max_dimension] || 4000
 
     self.assets_folders = options[:assets_folders] if options[:assets_folders]
 
