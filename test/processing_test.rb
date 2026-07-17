@@ -13,8 +13,8 @@ describe RackResize::Processing do
   SAMPLE_WEBP  = SAMPLES_DIR.join('sample.webp')  # 550x368
 
   IMAGE_MAGIC_DETECTED = system('magick -version > /dev/null 2>&1') || system('convert -version > /dev/null 2>&1') || false
-  IMAGE_MAGIC_HEIC_DETECTED = %x{identify -list format | grep HEIC}.to_s.strip != ""
-  VIPS_HEIC_DETECTED = %x{vips -l | grep heic}.to_s.strip != ""
+  IMAGE_MAGIC_HEIC_DETECTED = %x{identify -list format | grep HEIC}.to_s =~ /HEIC\s+HEIC/
+  VIPS_HEIC_DETECTED = %x{vips -l | grep heifsave}.to_s.strip != ""
 
   before { @tmpdir = Dir.mktmpdir('rack_resize_processing_test') }
   after  { FileUtils.rm_rf(@tmpdir) }

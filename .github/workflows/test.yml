@@ -31,5 +31,5 @@ jobs:
 
         run: |
           identify -list format | grep HEIC
-          vips -l | grep heic
+          VIPS_INFO=0 vips -l | grep heic
           bundle exec rake test
