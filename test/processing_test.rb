@@ -13,8 +13,8 @@ describe RackResize::Processing do
   SAMPLE_WEBP  = SAMPLES_DIR.join('sample.webp')  # 550x368
 
   IMAGE_MAGIC_DETECTED      = system('magick -version > /dev/null 2>&1') || system('convert -version > /dev/null 2>&1') || false
-  IMAGE_MAGIC_HEIC_DETECTED = system("identify samples/sample.heic")
-  VIPS_HEIC_DETECTED        = system("vipsheader samples/sample.heic")
+  IMAGE_MAGIC_HEIC_DETECTED = system("convert samples/sample1.heic /dev/null")
+  VIPS_HEIC_DETECTED        = system("vips thumbnail samples/sample.heic /tmp/sample_.heic 10")
 
   before { @tmpdir = Dir.mktmpdir('rack_resize_processing_test') }
   after  { FileUtils.rm_rf(@tmpdir) }
