@@ -29,4 +29,7 @@ jobs:
       - env:
           VIPS_INFO: 1
 
-        run: bundle exec rake test
+        run: |
+          identify -list format | grep HEIC
+          vips -l | grep heic
+          bundle exec rake test
