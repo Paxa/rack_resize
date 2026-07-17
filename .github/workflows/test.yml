@@ -19,7 +19,7 @@ jobs:
       - name: Install package
         run: |
           sudo apt-get update
-          sudo apt-get install -y libvips42 libvips-tools imagemagick libimlib2 libimlib2-dev
+          sudo apt-get install -y libvips42 libvips-tools imagemagick libimlib2 libimlib2-dev libheif-dev
 
       - uses: ruby/setup-ruby@v1
         with:
