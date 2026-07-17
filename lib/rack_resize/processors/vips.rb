@@ -16,9 +16,12 @@ class RackResize::Processors::Vips
     else
       begin
         tmp_file = image.call
+        if tmp_file.nil?
+          raise RackResize::Processing::Exception, "Can not process file #{source_file} with vips"
+        end
         return tmp_file.read
       ensure
-        tmp_file.unlink
+        tmp_file&.unlink
       end
     end
   end

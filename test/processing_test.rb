@@ -2,6 +2,8 @@ require_relative 'test_helper'
 require 'rszr'
 require 'mini_magick'
 
+MiniMagick.logger.level = :debug
+
 describe RackResize::Processing do
   SAMPLES_DIR  = Pathname.new(File.expand_path('../samples', __dir__))
   SAMPLE_JPEG  = SAMPLES_DIR.join('image_1.jpeg') # 300x400

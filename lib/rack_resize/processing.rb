@@ -3,6 +3,9 @@ require 'digest'
 class RackResize::Processing
   attr_reader :config
 
+  class Exception < Exception
+  end
+
   def initialize(config:)
     @config = config
   end
