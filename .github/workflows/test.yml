@@ -19,17 +19,11 @@ jobs:
       - name: Install package
         run: |
           sudo apt-get update
-          sudo apt-get install -y libvips42 libvips-tools imagemagick libimlib2 libimlib2-dev libheif-dev
+          sudo apt-get install -y libvips42 libvips-tools imagemagick libimlib2 libimlib2-dev
 
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
 
-      - env:
-          VIPS_INFO: 1
-
-        run: |
-          identify -list format | grep HEIC
-          VIPS_INFO=0 vips -l | grep heic
-          bundle exec rake test
+      - run: bundle exec rake test
