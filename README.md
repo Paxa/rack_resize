@@ -55,7 +55,7 @@ end
 
 ```ruby
 gem "image_processing"
-gem  "mini_magick"
+gem "mini_magick"
 ```
 
 </td>
@@ -71,7 +71,7 @@ gem  "mini_magick"
 
 ```ruby
 gem "image_processing"
-gem  "ruby-vips"
+gem "ruby-vips"
 ```
 
 </td>
