@@ -12,6 +12,10 @@ describe RackResize::Processing do
   SAMPLE_SVG   = SAMPLES_DIR.join('sample.svg')   # 104x97
   SAMPLE_WEBP  = SAMPLES_DIR.join('sample.webp')  # 550x368
 
+  IMAGE_MAGIC_DETECTED = system('magick -version > /dev/null 2>&1') || system('convert -version > /dev/null 2>&1') || false
+  IMAGE_MAGIC_HEIC_DETECTED = %x{identify -list format | grep HEIC}.to_s.strip != ""
+  VIPS_HEIC_DETECTED = %x{vips -l | grep heic}.to_s.strip != ""
+
   before { @tmpdir = Dir.mktmpdir('rack_resize_processing_test') }
   after  { FileUtils.rm_rf(@tmpdir) }
 
@@ -360,18 +364,21 @@ describe RackResize::Processing do
 
     describe 'mini_magick' do
       it 'resizes by width' do
+        skip "ImageMagick without HEIC support" unless IMAGE_MAGIC_HEIC_DETECTED
         with_processor(:mini_magick) do |p|
           assert_dimensions p.process!(source_file: SAMPLE_HEIC, req_params: {width: '150'}), 150, 200, ext: '.heic'
         end
       end
 
       it 'resizes by height' do
+        skip "ImageMagick without HEIC support" unless IMAGE_MAGIC_HEIC_DETECTED
         with_processor(:mini_magick) do |p|
           assert_dimensions p.process!(source_file: SAMPLE_HEIC, req_params: {height: '200'}), 150, 200, ext: '.heic'
         end
       end
 
       it 'fits within box when width constrains' do
+        skip "ImageMagick without HEIC support" unless IMAGE_MAGIC_HEIC_DETECTED
         with_processor(:mini_magick) do |p|
           io = p.process!(source_file: SAMPLE_HEIC, req_params: {width: '150', height: '400'})
           assert_dimensions io, 150, 200, ext: '.heic'
@@ -379,6 +386,7 @@ describe RackResize::Processing do
       end
 
       it 'fits within box when height constrains' do
+        skip "ImageMagick without HEIC support" unless IMAGE_MAGIC_HEIC_DETECTED
         with_processor(:mini_magick) do |p|
           io = p.process!(source_file: SAMPLE_HEIC, req_params: {width: '300', height: '200'})
           assert_dimensions io, 150, 200, ext: '.heic'
@@ -388,18 +396,21 @@ describe RackResize::Processing do
 
     describe 'vips' do
       it 'resizes by width' do
+        skip "Vips without HEIC support" unless VIPS_HEIC_DETECTED
         with_processor(:vips) do |p|
           assert_dimensions p.process!(source_file: SAMPLE_HEIC, req_params: {width: '150'}), 150, 200, ext: '.heic'
         end
       end
 
       it 'resizes by height' do
+        skip "Vips without HEIC support"  unless VIPS_HEIC_DETECTED
         with_processor(:vips) do |p|
           assert_dimensions p.process!(source_file: SAMPLE_HEIC, req_params: {height: '200'}), 150, 200, ext: '.heic'
         end
       end
 
       it 'fits within box when width constrains' do
+        skip "Vips without HEIC support"  unless VIPS_HEIC_DETECTED
         with_processor(:vips) do |p|
           io = p.process!(source_file: SAMPLE_HEIC, req_params: {width: '150', height: '400'})
           assert_dimensions io, 150, 200, ext: '.heic'
@@ -407,6 +418,7 @@ describe RackResize::Processing do
       end
 
       it 'fits within box when height constrains' do
+        skip "Vips without HEIC support"  unless VIPS_HEIC_DETECTED
         with_processor(:vips) do |p|
           io = p.process!(source_file: SAMPLE_HEIC, req_params: {width: '300', height: '200'})
           assert_dimensions io, 150, 200, ext: '.heic'
@@ -530,8 +542,7 @@ describe RackResize::Processing do
     when :sips
       skip 'sips is macOS-only' unless RUBY_PLATFORM.include?('darwin')
     when :mini_magick
-      skip 'ImageMagick not found' unless system('magick -version > /dev/null 2>&1') ||
-                                          system('convert -version > /dev/null 2>&1')
+      skip 'ImageMagick not found' unless IMAGE_MAGIC_DETECTED
     when :vips
       begin
         require 'vips'

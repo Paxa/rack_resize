@@ -21,7 +21,7 @@ class RackResize::Processors::MiniMagick
         tmp_file = image.call
         return tmp_file.read
       ensure
-        tmp_file.unlink
+        tmp_file&.unlink
       end
     end
   end
