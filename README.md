@@ -23,10 +23,11 @@ Cloudflare format: (can be used with helpers from `carrierwave-cloudflare` gem)
 ```
 /cdn-cgi/image/width=426,format=auto/assets/pets/dog.jpg
 ```
-Fastly and bunny.net: (tbd)
+Fastly / bunny.net format (query string params):
 ```
-/assets/pets/dog.jpg?width=300
+/assets/pets/dog.jpg?width=300&height=200&fit=cover&format=webp&quality=85
 ```
+Shortcuts: `w`/`h` for width/height, `f` for format, `q` for quality.
 
 ### Configuration:
 
@@ -45,12 +46,25 @@ end
 
 <table>
 <tr>
-<th>libaray</th>
-<th>dependency</th>
+<th>processor</th>
 <th>config</th>
+<th>system library</th>
+<th>gems</th>
+</tr>
+<tr>
+<td>sips (macOS only)</td>
+<td><code>processor: :sips</code></td>
+<td>built-in on macOS</td>
+<td>none</td>
 </tr>
 <tr>
 <td>mini_magick</td>
+<td><code>processor: :mini_magick</code></td>
+<td>
+
+ImageMagick — `brew install imagemagick`
+
+</td>
 <td>
 
 ```ruby
@@ -59,14 +73,15 @@ gem "mini_magick"
 ```
 
 </td>
-<td>
-
-`processor: :mini_magick`
-
-</td>
 </tr>
 <tr>
 <td>vips</td>
+<td><code>processor: :vips</code></td>
+<td>
+
+libvips — `brew install vips`
+
+</td>
 <td>
 
 ```ruby
@@ -75,34 +90,41 @@ gem "ruby-vips"
 ```
 
 </td>
-<td>
-
-`processor: :vips`
-
-</td>
-</tr>
-<tr>
-<td>sips (MacOS only)</td>
-<td>none</td>
-<td>
-
-`processor: :sips`
-
-</td>
 </tr>
 <tr>
 <td>imlib2</td>
+<td><code>processor: :imlib2</code></td>
 <td>
 
-```ruby
-gem  "rszr"
-```
+Imlib2 — `brew install imlib2`
 
 </td>
 <td>
 
-`processor: :imlib2`
+```ruby
+gem "rszr"
+```
 
 </td>
 </tr>
 </table>
+
+### Supported Image Formats:
+
+| Format | sips | mini_magick | vips | imlib2 |
+|--------|:----:|:-----------:|:----:|:------:|
+| JPEG   | ✅   | ✅          | ✅   | ✅     |
+| PNG    | ✅   | ✅          | ✅   | ✅     |
+| GIF    | ✅   | ✅          | ✅   | ✅     |
+| WebP   | ❌   | ✅ ¹        | ✅ ¹ | ❌     |
+| AVIF   | ✅ ² | ✅ ³        | ✅ ⁴ | ❌     |
+| HEIC   | ✅   | ✅ ³        | ✅ ⁴ | ❌     |
+| SVG    | ❌   | ✅ ⁵        | ✅ ⁶ | ❌     |
+
+¹ Requires ImageMagick / libvips built with **libwebp** support (`brew install webp`)
+² macOS 13 (Ventura) or later
+³ Requires ImageMagick built with **libheif** support (`brew install libheif`)
+⁴ Requires libvips built with **libheif** support (`brew install libheif`)
+⁵ Requires **Inkscape** or **librsvg** (`brew install librsvg`)
+⁶ Requires libvips built with **librsvg** support (`brew install librsvg`)
+
