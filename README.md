@@ -128,3 +128,25 @@ gem "rszr"
 ⁵ Requires **Inkscape** or **librsvg** (`brew install librsvg`)
 ⁶ Requires libvips built with **librsvg** support (`brew install librsvg`)
 
+### Performance Benchmarks:
+
+Measured on an Apple M1 Pro with Ruby 4.0.5. Output size: 300×200 px.
+Run with `ruby benchmark/processor_benchmark.rb`
+
+**JPEG — image_1.jpeg (51 KB)**
+
+| Processor   | i/s   | ms/i  | vs fastest |
+|-------------|------:|------:|:----------:|
+| imlib2      | 613.0 | 1.63  | —          |
+| vips        | 216.9 | 4.61  | 2.83×      |
+| mini_magick |  36.4 | 27.49 | 16.85×     |
+| sips        |  20.1 | 49.68 | 30.45×     |
+
+**PNG — sample.png (2 KB)**
+
+| Processor   | i/s   | ms/i | vs fastest |
+|-------------|------:|-----:|:----------:|
+| vips        | 431.1 | 2.32 | —          |
+| imlib2      | 221.7 | 4.51 | 1.94×      |
+| mini_magick |  36.9 | 27.12| 11.69×     |
+| sips        |  19.4 | 51.62| 22.25×     |
