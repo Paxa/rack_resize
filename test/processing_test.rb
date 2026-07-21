@@ -11,10 +11,13 @@ describe RackResize::Processing do
   SAMPLE_HEIC  = SAMPLES_DIR.join('sample.heic')  # 300x400
   SAMPLE_SVG   = SAMPLES_DIR.join('sample.svg')   # 104x97
   SAMPLE_WEBP  = SAMPLES_DIR.join('sample.webp')  # 550x368
+  SAMPLE_AVIF  = SAMPLES_DIR.join('sample.avif')  # 900x1200
 
   IMAGE_MAGIC_DETECTED      = system('magick -version > /dev/null 2>&1') || system('convert -version > /dev/null 2>&1') || false
   IMAGE_MAGIC_HEIC_DETECTED = system("convert samples/sample1.heic /dev/null")
   VIPS_HEIC_DETECTED        = system("vips thumbnail samples/sample.heic /tmp/sample_.heic 10")
+  IMAGE_MAGIC_AVIF_DETECTED = IMAGE_MAGIC_DETECTED && system("magick identify samples/sample.avif > /dev/null 2>&1")
+  VIPS_AVIF_DETECTED        = system("vips thumbnail samples/sample.avif /tmp/sample_avif_check.jpg 10 > /dev/null 2>&1")
 
   before { @tmpdir = Dir.mktmpdir('rack_resize_processing_test') }
   after  { FileUtils.rm_rf(@tmpdir) }
@@ -454,6 +457,299 @@ describe RackResize::Processing do
           io = p.process!(source_file: SAMPLE_SVG, req_params: {width: '104', height: '48'})
           assert_dimensions io, 51, 48, ext: '.svg'
         end
+      end
+    end
+  end
+
+  # -------------------------------------------------------------------------
+  describe 'AVIF' do
+    describe 'sips' do
+      it 'resizes by width' do
+        with_processor(:sips) do |p|
+          assert_dimensions p.process!(source_file: SAMPLE_AVIF, req_params: {width: '450'}), 450, 600, ext: '.avif'
+        end
+      end
+
+      it 'resizes by height' do
+        with_processor(:sips) do |p|
+          assert_dimensions p.process!(source_file: SAMPLE_AVIF, req_params: {height: '600'}), 450, 600, ext: '.avif'
+        end
+      end
+
+      it 'fits within box when width constrains' do
+        with_processor(:sips) do |p|
+          io = p.process!(source_file: SAMPLE_AVIF, req_params: {width: '450', height: '1200'})
+          assert_dimensions io, 450, 600, ext: '.avif'
+        end
+      end
+
+      it 'fits within box when height constrains' do
+        with_processor(:sips) do |p|
+          io = p.process!(source_file: SAMPLE_AVIF, req_params: {width: '900', height: '600'})
+          assert_dimensions io, 450, 600, ext: '.avif'
+        end
+      end
+    end
+
+    describe 'mini_magick' do
+      it 'resizes by width' do
+        skip 'ImageMagick without AVIF support' unless IMAGE_MAGIC_AVIF_DETECTED
+        with_processor(:mini_magick) do |p|
+          assert_dimensions p.process!(source_file: SAMPLE_AVIF, req_params: {width: '450'}), 450, 600, ext: '.avif'
+        end
+      end
+
+      it 'resizes by height' do
+        skip 'ImageMagick without AVIF support' unless IMAGE_MAGIC_AVIF_DETECTED
+        with_processor(:mini_magick) do |p|
+          assert_dimensions p.process!(source_file: SAMPLE_AVIF, req_params: {height: '600'}), 450, 600, ext: '.avif'
+        end
+      end
+
+      it 'fits within box when width constrains' do
+        skip 'ImageMagick without AVIF support' unless IMAGE_MAGIC_AVIF_DETECTED
+        with_processor(:mini_magick) do |p|
+          io = p.process!(source_file: SAMPLE_AVIF, req_params: {width: '450', height: '1200'})
+          assert_dimensions io, 450, 600, ext: '.avif'
+        end
+      end
+
+      it 'fits within box when height constrains' do
+        skip 'ImageMagick without AVIF support' unless IMAGE_MAGIC_AVIF_DETECTED
+        with_processor(:mini_magick) do |p|
+          io = p.process!(source_file: SAMPLE_AVIF, req_params: {width: '900', height: '600'})
+          assert_dimensions io, 450, 600, ext: '.avif'
+        end
+      end
+    end
+
+    describe 'vips' do
+      it 'resizes by width' do
+        skip 'Vips without AVIF support' unless VIPS_AVIF_DETECTED
+        with_processor(:vips) do |p|
+          assert_dimensions p.process!(source_file: SAMPLE_AVIF, req_params: {width: '450'}), 450, 600, ext: '.avif'
+        end
+      end
+
+      it 'resizes by height' do
+        skip 'Vips without AVIF support' unless VIPS_AVIF_DETECTED
+        with_processor(:vips) do |p|
+          assert_dimensions p.process!(source_file: SAMPLE_AVIF, req_params: {height: '600'}), 450, 600, ext: '.avif'
+        end
+      end
+
+      it 'fits within box when width constrains' do
+        skip 'Vips without AVIF support' unless VIPS_AVIF_DETECTED
+        with_processor(:vips) do |p|
+          io = p.process!(source_file: SAMPLE_AVIF, req_params: {width: '450', height: '1200'})
+          assert_dimensions io, 450, 600, ext: '.avif'
+        end
+      end
+
+      it 'fits within box when height constrains' do
+        skip 'Vips without AVIF support' unless VIPS_AVIF_DETECTED
+        with_processor(:vips) do |p|
+          io = p.process!(source_file: SAMPLE_AVIF, req_params: {width: '900', height: '600'})
+          assert_dimensions io, 450, 600, ext: '.avif'
+        end
+      end
+    end
+
+    describe 'convert to avif' do
+      it 'mini_magick: converts JPEG to AVIF' do
+        skip 'ImageMagick without AVIF support' unless IMAGE_MAGIC_AVIF_DETECTED
+        with_processor(:mini_magick) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', format: 'avif'})
+          assert_dimensions io, 150, 200, ext: '.avif'
+        end
+      end
+
+      it 'vips: converts JPEG to AVIF' do
+        skip 'Vips without AVIF support' unless VIPS_AVIF_DETECTED
+        with_processor(:vips) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', format: 'avif'})
+          assert_dimensions io, 150, 200, ext: '.avif'
+        end
+      end
+
+      it 'sips: converts JPEG to AVIF' do
+        with_processor(:sips) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', format: 'avif'})
+          assert_dimensions io, 150, 200, ext: '.avif'
+        end
+      end
+    end
+  end
+
+  # -------------------------------------------------------------------------
+  describe 'fit' do
+    # SAMPLE_JPEG is 300x400
+
+    describe 'cover / crop — fills exact dimensions by cropping' do
+      it 'sips: fit=cover produces exact dimensions' do
+        with_processor(:sips) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '200', height: '200', fit: 'cover'})
+          assert_dimensions io, 200, 200
+        end
+      end
+
+      it 'mini_magick: fit=cover produces exact dimensions' do
+        with_processor(:mini_magick) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '200', height: '200', fit: 'cover'})
+          assert_dimensions io, 200, 200
+        end
+      end
+
+      it 'vips: fit=cover produces exact dimensions' do
+        with_processor(:vips) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '200', height: '200', fit: 'cover'})
+          assert_dimensions io, 200, 200
+        end
+      end
+
+      it 'imlib2: fit=cover produces exact dimensions' do
+        with_processor(:imlib2) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '200', height: '200', fit: 'cover'})
+          assert_dimensions io, 200, 200
+        end
+      end
+
+      it 'mini_magick: fit=crop is an alias for cover' do
+        with_processor(:mini_magick) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '200', height: '200', fit: 'crop'})
+          assert_dimensions io, 200, 200
+        end
+      end
+
+      it 'mini_magick: cover with non-square target fills both dimensions' do
+        with_processor(:mini_magick) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '300', height: '100', fit: 'cover'})
+          assert_dimensions io, 300, 100
+        end
+      end
+    end
+
+    describe 'contain / bounds — fits within box preserving aspect ratio' do
+      it 'mini_magick: fit=contain behaves like default (resize_to_limit)' do
+        with_processor(:mini_magick) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '200', height: '200', fit: 'contain'})
+          assert_dimensions io, 150, 200
+        end
+      end
+
+      it 'mini_magick: fit=bounds is an alias for contain' do
+        with_processor(:mini_magick) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '200', height: '200', fit: 'bounds'})
+          assert_dimensions io, 150, 200
+        end
+      end
+
+      it 'sips: fit=contain fits within box' do
+        with_processor(:sips) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '200', height: '200', fit: 'contain'})
+          assert_dimensions io, 150, 200
+        end
+      end
+
+      it 'imlib2: fit=contain fits within box' do
+        with_processor(:imlib2) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '200', height: '200', fit: 'contain'})
+          assert_dimensions io, 150, 200
+        end
+      end
+    end
+
+    describe 'cover with single dimension falls back to contain behavior' do
+      it 'mini_magick: fit=cover with only width acts as width limit' do
+        with_processor(:mini_magick) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', fit: 'cover'})
+          assert_dimensions io, 150, 200
+        end
+      end
+    end
+  end
+
+  # -------------------------------------------------------------------------
+  describe 'format conversion' do
+    it 'mini_magick: converts JPEG to PNG' do
+      with_processor(:mini_magick) do |p|
+        io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', format: 'png'})
+        assert_dimensions io, 150, 200, ext: '.png'
+      end
+    end
+
+    it 'mini_magick: converts JPEG to WebP' do
+      with_processor(:mini_magick) do |p|
+        io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', format: 'webp'})
+        assert_dimensions io, 150, 200, ext: '.webp'
+      end
+    end
+
+    it 'vips: converts JPEG to WebP' do
+      with_processor(:vips) do |p|
+        io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', format: 'webp'})
+        assert_dimensions io, 150, 200, ext: '.webp'
+      end
+    end
+
+    it 'imlib2: converts JPEG to PNG' do
+      with_processor(:imlib2) do |p|
+        io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', format: 'png'})
+        assert_dimensions io, 150, 200, ext: '.png'
+      end
+    end
+
+    it 'imlib2: converts JPEG to WebP' do
+      with_processor(:imlib2) do |p|
+        io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', format: 'webp'})
+        assert_dimensions io, 150, 200, ext: '.webp'
+      end
+    end
+
+    it 'sips: converts JPEG to PNG' do
+      with_processor(:sips) do |p|
+        io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', format: 'png'})
+        assert_dimensions io, 150, 200, ext: '.png'
+      end
+    end
+
+    it "format=auto is treated as no conversion (uses source format)" do
+      with_processor(:mini_magick) do |p|
+        io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', format: 'auto'})
+        assert_dimensions io, 150, 200
+      end
+    end
+  end
+
+  # -------------------------------------------------------------------------
+  describe 'quality' do
+    it 'mini_magick: per-request quality overrides default' do
+      with_processor(:mini_magick) do |p|
+        hi = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', quality: '95'})
+        lo = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', quality: '10'})
+        assert_operator lo.size, :<, hi.size
+      end
+    end
+
+    it 'vips: per-request quality overrides default' do
+      with_processor(:vips) do |p|
+        hi = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', quality: '95'})
+        lo = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', quality: '10'})
+        assert_operator lo.size, :<, hi.size
+      end
+    end
+
+    it 'sips: accepts quality param without error' do
+      with_processor(:sips) do |p|
+        io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', quality: '50'})
+        assert_kind_of StringIO, io
+      end
+    end
+
+    it 'imlib2: accepts quality param without error' do
+      with_processor(:imlib2) do |p|
+        io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', quality: '50'})
+        assert_kind_of StringIO, io
       end
     end
   end

@@ -18,8 +18,9 @@ class RackResize::RackApp
     request = Rack::Request.new(env)
     fullpath = request.path_info
 
-    RackResize::InputParsers::Cloudflare.parse_input(fullpath, cf_path_prefix: @cf_path_prefix) =>
-      {route_matched:, req_params:, asset_path:}
+    result = RackResize::InputParsers::Cloudflare.parse_input(fullpath, cf_path_prefix: @cf_path_prefix)
+    result = RackResize::InputParsers::QueryString.parse_input(fullpath, request.query_string) unless result[:route_matched]
+    result => {route_matched:, req_params:, asset_path:}
 
     return @app.call(env) unless route_matched
     return error_resp("can't parse file path") unless asset_path
@@ -52,15 +53,17 @@ class RackResize::RackApp
     end
 
     file_content = @processing.process!(source_file: asset_file, req_params:)
-    return send_file(asset_file:, file_content:)
+    output_format = req_params[:format].then { |f| (f && f != 'auto') ? f : nil }
+    return send_file(asset_file:, file_content:, output_format:)
   end
 
   def error_resp(message, http_code: 404)
     [http_code, {}, [message]]
   end
 
-  def send_file(asset_file:, file_content: nil)
-    content_type = Rack::Mime.mime_type(File.extname(asset_file), "application/octet-stream")
+  def send_file(asset_file:, file_content: nil, output_format: nil)
+    ext = (output_format && output_format != 'auto') ? ".#{output_format}" : File.extname(asset_file)
+    content_type = Rack::Mime.mime_type(ext, "application/octet-stream")
 
     [
       200,

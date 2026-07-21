@@ -9,7 +9,7 @@ module RackResize::InputParsers::Cloudflare
       return { route_matched: false, req_params: nil, asset_path: nil }
     end
 
-    fullpath = fullpath.delete_prefix("/cdn-cgi").delete_prefix("/image").delete_prefix("/")
+    fullpath = fullpath.delete_prefix(cf_path_prefix).delete_prefix("/")
     file_path_match = fullpath.match(%r{(?<params>[^\/]+)(?<file>\/.+?)(-[\da-f]{8})?(?<ext>\.\w{2,})$})
 
     return { route_matched: true, req_params: nil, asset_path: nil } unless file_path_match

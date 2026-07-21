@@ -12,3 +12,6 @@ gem 'railties'
 gem 'minitest'
 gem 'minitest-reporters'
 gem 'rake'
+
+gem 'benchmark-ips'
+gem 'webrick'

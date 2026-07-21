@@ -50,6 +50,24 @@ describe RackResize::RackApp do
       assert_equal 'inline', headers['content-disposition']
       assert_match(/\d+/, headers['cache-control'])
     end
+
+    it 'uses output_format for content-type when specified' do
+      asset_file = Pathname.new(File.join(@tmpdir, 'photo.jpg'))
+      _, headers, _ = @app.send_file(asset_file:, file_content: StringIO.new('data'), output_format: 'webp')
+      assert_equal 'image/webp', headers['content-type']
+    end
+
+    it 'falls back to source extension when output_format is nil' do
+      asset_file = Pathname.new(File.join(@tmpdir, 'photo.jpg'))
+      _, headers, _ = @app.send_file(asset_file:, file_content: StringIO.new('data'), output_format: nil)
+      assert_equal 'image/jpeg', headers['content-type']
+    end
+
+    it 'ignores output_format=auto and uses source extension' do
+      asset_file = Pathname.new(File.join(@tmpdir, 'photo.jpg'))
+      _, headers, _ = @app.send_file(asset_file:, file_content: StringIO.new('data'), output_format: 'auto')
+      assert_equal 'image/jpeg', headers['content-type']
+    end
   end
 
   describe '#call' do

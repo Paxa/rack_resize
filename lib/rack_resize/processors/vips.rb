@@ -6,10 +6,19 @@ end
 
 class RackResize::Processors::Vips
 
-  def resize(source_file:, target_file:, target_width:, target_height:)
+  def resize(source_file:, target_file:, target_width:, target_height:, fit: nil, format: nil, quality: nil)
+    quality ||= RackResize.config.default_quality
+    cover = (fit == 'cover' || fit == 'crop') && target_width && target_height
+
     image = ImageProcessing::Vips.source(source_file)
-    image = image.resize_to_limit(target_width, target_height) if target_width || target_height
-    image = image.saver(quality: RackResize.config.default_quality)
+    image = image.convert(format) if format
+
+    if target_width || target_height
+      image = cover ? image.resize_to_fill(target_width, target_height)
+                    : image.resize_to_limit(target_width, target_height)
+    end
+
+    image = image.saver(quality: quality)
 
     if target_file
       image.call(destination: target_file)

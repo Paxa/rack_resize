@@ -9,7 +9,9 @@ class RackResize::Processing
 
   def process!(source_file:, req_params:)
     if config.save_resized?
-      tmp_file_name = config.cache_folder.join(Digest::MD5.hexdigest(source_file.to_s) + File.extname(source_file))
+      cache_key = Digest::MD5.hexdigest("#{source_file}:#{req_params.to_a.sort.to_s}")
+      output_ext = output_extension(source_file, req_params[:format])
+      tmp_file_name = config.cache_folder.join(cache_key + output_ext)
       FileUtils.mkdir_p(tmp_file_name.dirname)
 
       unless tmp_file_name.exist?
@@ -32,9 +34,13 @@ class RackResize::Processing
     target_width  = (req_params[:w]&.to_i || req_params[:width]&.to_i)&.*(dpr)&.clamp(1, max)
     target_height = (req_params[:h]&.to_i || req_params[:height]&.to_i)&.*(dpr)&.clamp(1, max)
 
+    fit     = req_params[:fit]
+    format  = req_params[:format].then { |f| f == 'auto' ? nil : f }
+    quality = req_params[:quality]&.to_i
+
     start_time = Time.now
     begin
-      return config.processor_instance.resize(source_file:, target_file:, target_width:, target_height:)
+      return config.processor_instance.resize(source_file:, target_file:, target_width:, target_height:, fit:, format:, quality:)
     ensure
       processing_time = (Time.now.to_f - start_time.to_f).round(3)
       logger.info("RESIZE IMAGE #{config.processor} #{source_file} - #{req_params} - #{processing_time}s")
@@ -44,6 +50,13 @@ class RackResize::Processing
   def logger
     config.logger ||
       (defined?(Rails) && Rails.respond_to?(:logger) && Rails.logger) ||
-      (require('logger') && Logger.new(STDOUT))
+      (@_logger ||= (require 'logger'; Logger.new($stdout)))
+  end
+
+  private
+
+  def output_extension(source_file, format)
+    return File.extname(source_file) if format.nil? || format == 'auto'
+    ".#{format.to_s.downcase}"
   end
 end
