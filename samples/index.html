@@ -1,34 +1,317 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>rack_resize — sample gallery</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<p>
-    height 150: <br>
-    <img src="/cdn-cgi/image/height=150/samples/image_1.jpeg"/>
-    <img src="/cdn-cgi/image/height=150/samples/image_2.jpeg"/>
-    <img src="/cdn-cgi/image/height=150/samples/image_3.jpeg"/>
-    <img src="/cdn-cgi/image/height=150/samples/image_4.jpeg"/>
-</p>
+    body {
+      font-family: system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      background: #a7efff;
+      color: #222;
+      padding: 24px 16px 64px;
+    }
 
-<p>
-    width 150: <br>
-    <img src="/cdn-cgi/image/width=150/samples/image_1.jpeg"/>
-    <img src="/cdn-cgi/image/width=150/samples/image_2.jpeg"/>
-    <img src="/cdn-cgi/image/width=150/samples/image_3.jpeg"/>
-    <img src="/cdn-cgi/image/width=150/samples/image_4.jpeg"/>
-</p>
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      color: #111;
+    }
 
-<p>
-    width 50: <br>
-    <img src="/cdn-cgi/image/width=50/samples/image_1.jpeg"/>
-    <img src="/cdn-cgi/image/width=50/samples/image_2.jpeg"/>
-    <img src="/cdn-cgi/image/width=50/samples/image_3.jpeg"/>
-    <img src="/cdn-cgi/image/width=50/samples/image_4.jpeg"/>
-</p>
+    .section {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      overflow: hidden;
 
-<p>
-    originals: <br>
-    <img src="image_1.jpeg"/>
-    <img src="image_2.jpeg"/>
-    <img src="image_3.jpeg"/>
-    <img src="image_4.jpeg"/>
-</p>
+      & summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        cursor: pointer;
+        user-select: none;
+        list-style: none;
+        gap: 12px;
 
+        &::-webkit-details-marker { display: none; }
+
+        &:hover { background: #fafafa; }
+
+        & .title {
+          font-weight: 600;
+          font-size: 15px;
+        }
+
+        & .desc {
+          color: #555;
+          font-size: 14px;
+          flex: 1;
+        }
+
+        & .chevron {
+          width: 18px;
+          height: 18px;
+          flex-shrink: 0;
+          color: #999;
+          transition: transform 0.2s ease;
+        }
+      }
+
+      &[open] > summary .chevron {
+        transform: rotate(180deg);
+      }
+
+      & .body {
+        padding: 0 18px 20px;
+        border-top: 1px solid #f0f0f0;
+      }
+    }
+
+    .url-example {
+      font-family: ui-monospace, monospace;
+      font-size: 12px;
+      background: #f7f7f7;
+      border: 1px solid #e8e8e8;
+      border-radius: 4px;
+      padding: 8px 12px;
+      margin: 14px 0 16px;
+      color: #555;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      & img {
+        display: block;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 12px 12px;
+      }
+
+      & .label {
+        font-size: 12px;
+        color: #666;
+        font-family: ui-monospace, monospace;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>rack_resize — sample gallery</h1>
+
+  <details class="section" open>
+    <summary>
+      <span class="title">Resize to limit (contain)</span>
+      <span class="desc">Scales down to fit within given dimensions, preserving aspect ratio</span>
+      <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 8l5 5 5-5"/>
+      </svg>
+    </summary>
+    <div class="body">
+      <div class="url-example">/samples/image_1.jpeg?width=200&amp;height=150
+/samples/image_1.jpeg?w=200&amp;h=150</div>
+      <p style="color:#555;font-size:14px;margin-bottom:14px">Both images are constrained to 200×150 — shorter side scales proportionally.</p>
+      <div class="grid" id="grid-contain"></div>
+    </div>
+  </details>
+
+  <details class="section">
+    <summary>
+      <span class="title">Resize to cover (crop)</span>
+      <span class="desc">Fills the exact box by center-cropping, no empty space</span>
+      <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 8l5 5 5-5"/>
+      </svg>
+    </summary>
+    <div class="body">
+      <div class="url-example">/samples/image_1.jpeg?width=200&amp;height=150&amp;fit=cover
+/samples/image_1.jpeg?width=150&amp;height=150&amp;fit=crop</div>
+      <div class="grid" id="grid-cover"></div>
+    </div>
+  </details>
+
+  <details class="section">
+    <summary>
+      <span class="title">Width only / Height only</span>
+      <span class="desc">Resize by a single dimension, other side scales freely</span>
+      <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 8l5 5 5-5"/>
+      </svg>
+    </summary>
+    <div class="body">
+      <div class="url-example">/samples/image_1.jpeg?w=180      ← width only
+/samples/image_1.jpeg?h=120      ← height only</div>
+      <div class="grid" id="grid-single"></div>
+    </div>
+  </details>
+
+  <details class="section">
+    <summary>
+      <span class="title">Quality</span>
+      <span class="desc">JPEG/WebP compression level (1–100, default 95)</span>
+      <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 8l5 5 5-5"/>
+      </svg>
+    </summary>
+    <div class="body">
+      <div class="url-example">/samples/image_1.jpeg?w=300&amp;quality=95   ← q=95
+/samples/image_1.jpeg?w=300&amp;q=50          ← q=50
+/samples/image_1.jpeg?w=300&amp;q=10          ← q=10</div>
+      <div class="grid" id="grid-quality"></div>
+    </div>
+  </details>
+
+  <details class="section">
+    <summary>
+      <span class="title">Output formats</span>
+      <span class="desc">Convert to jpeg, png, webp, avif</span>
+      <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 8l5 5 5-5"/>
+      </svg>
+    </summary>
+    <div class="body">
+      <div class="url-example">/samples/image_1.jpeg?w=200&amp;format=webp
+/samples/image_1.jpeg?w=200&amp;f=avif
+/samples/sample.png?w=200&amp;f=jpeg</div>
+      <div class="grid" id="grid-formats"></div>
+    </div>
+  </details>
+
+  <details class="section">
+    <summary>
+      <span class="title">DPR (device pixel ratio)</span>
+      <span class="desc">Multiplies width/height for retina screens</span>
+      <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 8l5 5 5-5"/>
+      </svg>
+    </summary>
+    <div class="body">
+      <div class="url-example">/samples/image_1.jpeg?w=100&amp;dpr=1   → 100px wide
+/samples/image_1.jpeg?w=100&amp;dpr=2   → 200px wide</div>
+      <div class="grid" id="grid-dpr"></div>
+    </div>
+  </details>
+
+  <details class="section">
+    <summary>
+      <span class="title">Background color</span>
+      <span class="desc">Flatten transparency when converting to JPEG; fill with a solid color</span>
+      <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 8l5 5 5-5"/>
+      </svg>
+    </summary>
+    <div class="body">
+      <div class="url-example">/samples/sample.png?w=200&amp;f=jpeg&amp;bg-color=white
+/samples/sample.png?w=200&amp;f=jpeg&amp;bg=%23a84
+/samples/sample.png?w=200&amp;f=jpeg&amp;bg=0,128,255
+/samples/sample.png?w=200&amp;f=jpeg&amp;background=cornflowerblue</div>
+      <p style="color:#555;font-size:13px;margin-bottom:14px">PNG converted to JPEG with different background colors. Aliases: <code>bg-color</code>, <code>background</code>, <code>bg</code>.</p>
+      <div class="grid" id="grid-bg"></div>
+    </div>
+  </details>
+
+  <details class="section">
+    <summary>
+      <span class="title">Cloudflare URL format</span>
+      <span class="desc">Alternative /cdn-cgi/image/… path format</span>
+      <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 8l5 5 5-5"/>
+      </svg>
+    </summary>
+    <div class="body">
+      <div class="url-example">/cdn-cgi/image/width=200,height=150/samples/image_1.jpeg
+/cdn-cgi/image/width=200,height=150,fit=cover/samples/image_1.jpeg
+/cdn-cgi/image/width=200,format=webp,quality=80/samples/image_1.jpeg</div>
+      <div class="grid" id="grid-cf"></div>
+    </div>
+  </details>
+
+  <script>
+    const IMAGES = ['image_1.jpeg', 'image_2.jpeg', 'image_3.jpeg', 'image_4.jpeg'];
+
+    function img(src, label) {
+      return `<div class="item"><img src="${src}" loading="lazy"><span class="label">${label}</span></div>`;
+    }
+
+    function fill(id, items) {
+      document.getElementById(id).innerHTML = items.join('');
+    }
+
+    // Resize to contain
+    fill('grid-contain', IMAGES.flatMap(f => [
+      img(`/samples/${f}?w=200&h=150`, `${f} 200×150`),
+      img(`/samples/${f}?w=120`,       `${f} w=120`),
+    ]));
+
+    // Cover crop — square and rect
+    fill('grid-cover', IMAGES.flatMap(f => [
+      img(`/samples/${f}?width=200&height=150&fit=cover`, `200×150 cover`),
+      img(`/samples/${f}?width=150&height=150&fit=crop`,  `150×150 crop`),
+    ]));
+
+    // Single dimension
+    fill('grid-single', IMAGES.flatMap(f => [
+      img(`/samples/${f}?w=180`, `w=180`),
+      img(`/samples/${f}?h=120`, `h=120`),
+    ]));
+
+    // Quality comparison on first two images
+    fill('grid-quality', IMAGES.slice(0, 2).flatMap(f => [95, 50, 10].map(q =>
+      img(`/samples/${f}?w=280&q=${q}`, `q=${q}`)
+    )));
+
+    // Output formats
+    const FORMAT_TESTS = [
+      ['/samples/image_1.jpeg?w=200&format=jpeg',   'image_1 → jpeg'],
+      ['/samples/image_1.jpeg?w=200&f=png',         'image_1 → png'],
+      ['/samples/image_1.jpeg?w=200&f=webp',        'image_1 → webp'],
+      ['/samples/image_1.jpeg?w=200&f=avif',        'image_1 → avif'],
+      ['/samples/sample.png?w=200&f=jpeg&bg=white', 'sample.png → jpeg'],
+      ['/samples/sample.webp?w=200&f=png',          'sample.webp → png'],
+    ];
+    fill('grid-formats', FORMAT_TESTS.map(([src, label]) => img(src, label)));
+
+    // DPR
+    fill('grid-dpr', IMAGES.slice(0, 2).flatMap(f => [1, 1.5, 2].map(d =>
+      img(`/samples/${f}?w=100&dpr=${d}`, `dpr=${d} (${100 * d}px)`)
+    )));
+
+    // Background color — PNG with transparency converted to JPEG
+    const BG_COLORS = [
+      ['white',            'white'],
+      ['%23a84',           '#a84'],
+      ['0%2C128%2C255',   '0,128,255'],
+      ['cornflowerblue',   'cornflowerblue'],
+      ['255%2C200%2C0%2C0.8', '255,200,0,0.8'],
+      ['%231a1a2e',        '#1a1a2e'],
+    ];
+    fill('grid-bg', BG_COLORS.map(([val, label]) =>
+      img(`/samples/sample.png?w=200&f=jpeg&bg-color=${val}`, label)
+    ));
+
+    // Cloudflare format
+    fill('grid-cf', IMAGES.flatMap(f => [
+      img(`/cdn-cgi/image/width=200,height=150/samples/${f}`,            `contain`),
+      img(`/cdn-cgi/image/width=200,height=150,fit=cover/samples/${f}`,  `cover`),
+      img(`/cdn-cgi/image/width=200,format=webp,quality=80/samples/${f}`,`webp q=80`),
+    ]));
+  </script>
+</body>
+</html>

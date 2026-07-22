@@ -3,7 +3,7 @@ require "tempfile"
 
 class RackResize::Processors::Sips
 
-  def resize(source_file:, target_width:, target_height:, target_file: nil, fit: nil, format: nil, quality: nil)
+  def resize(source_file:, target_width:, target_height:, target_file: nil, fit: nil, format: nil, quality: nil, bg_color: nil)
     quality ||= RackResize.config.default_quality
     cover = (fit == 'cover' || fit == 'crop') && target_width && target_height
 

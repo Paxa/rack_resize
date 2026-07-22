@@ -40,13 +40,14 @@ class RackResize::Processing
     target_width  = (req_params[:w]&.to_i || req_params[:width]&.to_i)&.*(dpr)&.clamp(1, max)
     target_height = (req_params[:h]&.to_i || req_params[:height]&.to_i)&.*(dpr)&.clamp(1, max)
 
-    fit     = req_params[:fit]
-    format  = req_params[:format].then { |f| f == 'auto' ? nil : f }
-    quality = req_params[:quality]&.to_i&.clamp(1, 100)
+    fit      = req_params[:fit]
+    format   = req_params[:format].then { |f| f == 'auto' ? nil : f }
+    quality  = req_params[:quality]&.to_i&.clamp(1, 100)
+    bg_color = RackResize::ColorUtils.parse_color(req_params[:"bg-color"] || req_params[:background])
 
     start_time = Time.now
     begin
-      return config.processor_instance.resize(source_file:, target_file:, target_width:, target_height:, fit:, format:, quality:)
+      return config.processor_instance.resize(source_file:, target_file:, target_width:, target_height:, fit:, format:, quality:, bg_color:)
     ensure
       processing_time = (Time.now.to_f - start_time.to_f).round(3)
       logger.info("RESIZE IMAGE #{config.processor} #{source_file} - #{req_params} - #{processing_time}s")

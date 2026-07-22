@@ -7,7 +7,7 @@
 require_relative "lib/rack_resize"
 require "rack/static"
 
-use RackResize::RackApp, processor: :imlib2, assets_folder: "samples"
+use RackResize::RackApp, processor: :vips, assets_folders: ["samples"]
 
 use Rack::Static, urls: [""], root: "samples", index: "index.html"
 

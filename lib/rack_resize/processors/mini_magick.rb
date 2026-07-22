@@ -6,7 +6,7 @@ end
 
 class RackResize::Processors::MiniMagick
 
-  def resize(source_file:, target_width:, target_height:, target_file: nil, fit: nil, format: nil, quality: nil)
+  def resize(source_file:, target_width:, target_height:, target_file: nil, fit: nil, format: nil, quality: nil, bg_color: nil)
     quality ||= RackResize.config.default_quality
     cover = (fit == 'cover' || fit == 'crop') && target_width && target_height
 
@@ -16,6 +16,10 @@ class RackResize::Processors::MiniMagick
     if target_width || target_height
       image = cover ? image.resize_to_fill(target_width, target_height)
                     : image.resize_to_limit(target_width, target_height)
+    end
+
+    if bg_color
+      image = image.background(RackResize::ColorUtils.to_hex(bg_color)).flatten
     end
 
     image = image.saver(quality: quality)

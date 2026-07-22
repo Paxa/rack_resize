@@ -13,7 +13,7 @@ end
 How to use with Rack
 
 ```ruby
-use RackResize::RackApp, processor: :imlib2, assets_folder: "samples"
+use RackResize::RackApp, processor: :mini_magick, assets_folders: ["samples"]
 use Rack::Static, urls: [""], root: "samples", index: "index.html" # optional
 ```
 
@@ -27,13 +27,73 @@ Fastly / bunny.net format (query string params):
 ```
 /assets/pets/dog.jpg?width=300&height=200&fit=cover&format=webp&quality=85
 ```
-Shortcuts: `w`/`h` for width/height, `f` for format, `q` for quality.
+
+### Supported Parameters:
+
+| Parameter  | Shortcut | Type | Description |
+|------------|----------|------|-------------|
+| `width`    | `w`      | integer | Target width in pixels. Scales proportionally if `height` is omitted. |
+| `height`   | `h`      | integer | Target height in pixels. Scales proportionally if `width` is omitted. |
+| `fit`      | —        | string  | Resize mode: `contain` (default), `cover`, `crop`. See below. |
+| `format`   | `f`      | string  | Output format: `jpeg`, `png`, `webp`, `avif`, `gif`. Use `auto` to keep original. |
+| `quality`  | `q`      | integer (1–100) | Compression quality. Defaults to `default_quality` config value (95). |
+| `dpr`      | —        | float (0.1–10) | Device pixel ratio. Multiplies `width` and `height` before processing. |
+| `bg-color` | `bg`     | color   | Background color for flattening transparency. Also aliased as `background`. See formats below. |
+
+**Background color formats:**
+- CSS named color: `white`, `red`, `cornflowerblue` (all 148 CSS colors supported)
+- 3-digit hex: `#a84`
+- 6-digit hex: `#aa8844`
+- 8-digit hex: `#aa884480` (last two digits = alpha 0–255)
+- Decimal RGB: `0,255,0`
+- Decimal RGBA: `0,255,0,0.5` (alpha 0.0–1.0)
+
+Supported by: `vips`, `mini_magick`. Accepted but ignored by `sips` and `imlib2`.
+
+**Fit modes:**
+- `contain` — resizes to fit within the given box, preserving aspect ratio (default)
+- `cover` / `crop` — resizes and center-crops to fill the exact box
+
+**Example URLs (query string format):**
+```
+# Resize to width only
+/samples/image_1.jpeg?w=400
+
+# Resize to fit within 400×300 box
+/samples/image_1.jpeg?width=400&height=300
+
+# Cover-crop to exact 400×300
+/samples/image_1.jpeg?width=400&height=300&fit=cover
+
+# Convert to WebP at 80% quality
+/samples/image_1.jpeg?w=400&f=webp&q=80
+
+# Retina (2×) resize
+/samples/image_1.jpeg?w=200&dpr=2
+
+# Flatten transparency with a background color
+/samples/image.png?w=400&f=jpeg&bg-color=white
+/samples/image.png?w=400&f=jpeg&bg=%23ff0000
+/samples/image.png?w=400&f=jpeg&background=0,255,0,0.5
+```
+
+**Example URLs (Cloudflare format):**
+```
+# Resize to width
+/cdn-cgi/image/width=400/samples/image_1.jpeg
+
+# Cover-crop with format conversion
+/cdn-cgi/image/width=400,height=300,fit=cover,format=webp/samples/image_1.jpeg
+
+# Quality + format
+/cdn-cgi/image/width=400,format=avif,quality=80/samples/image_1.jpeg
+```
 
 ### Configuration:
 
 ```ruby
 RackResize.configure do |config|
-  config.assets_folders     = { "assets" => Rails.root.join('app', 'assets', 'images') }
+  config.assets_folders     = { assets: Rails.root.join('app', 'assets', 'images') }
   config.processor          = :sips / :vips / :mini_magick / :imlib2
   config.default_quality    = 95
   config.save_resized       = false

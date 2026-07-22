@@ -2,6 +2,7 @@ module RackResize
   autoload :Configuration, "#{__dir__}/rack_resize/configuration"
   autoload :RackApp,       "#{__dir__}/rack_resize/rack_app"
   autoload :Processing,    "#{__dir__}/rack_resize/processing"
+  autoload :ColorUtils,    "#{__dir__}/rack_resize/color_utils"
 
   module Processors
     autoload :Sips,       "#{__dir__}/rack_resize/processors/sips"

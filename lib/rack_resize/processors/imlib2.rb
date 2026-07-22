@@ -6,7 +6,7 @@ end
 
 class RackResize::Processors::Imlib2
 
-  def resize(source_file:, target_file:, target_width:, target_height:, fit: nil, format: nil, quality: nil)
+  def resize(source_file:, target_file:, target_width:, target_height:, fit: nil, format: nil, quality: nil, bg_color: nil)
     quality ||= RackResize.config.default_quality
     cover = (fit == 'cover' || fit == 'crop') && target_width && target_height
 

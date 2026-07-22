@@ -8,8 +8,8 @@ module RackResize::InputParsers::QueryString
   #
   # Shortcuts: f=format, q=quality
 
-  CANONICAL_PARAMS = %w[width height quality dpr format fit].freeze
-  PARAM_ALIASES    = { 'f' => :format, 'q' => :quality, 'h' => :height, 'w' => :width }.freeze
+  CANONICAL_PARAMS = %w[width height quality dpr format fit bg-color background].freeze
+  PARAM_ALIASES    = { 'f' => :format, 'q' => :quality, 'h' => :height, 'w' => :width, 'bg' => :'bg-color' }.freeze
   RESIZE_PARAMS    = (CANONICAL_PARAMS + PARAM_ALIASES.keys).freeze
 
   def parse_input(fullpath, query_string)

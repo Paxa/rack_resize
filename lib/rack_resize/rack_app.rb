@@ -32,7 +32,7 @@ class RackResize::RackApp
     config.assets_folders.each do |prefix, folder|
       if asset_path.start_with?(prefix)
         asset_file = folder.join(asset_path.delete_prefix(prefix + (prefix.end_with?("/") ? "" : "/")))
-        if asset_file.expand_path.to_s.start_with?(folder.to_s)
+        if asset_file.expand_path.to_s.start_with?(folder.expand_path.to_s)
           has_matched = true
         end
         break
