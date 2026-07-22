@@ -37,6 +37,7 @@ class RackResize::Processors::Imlib2
 
     if target_file
       image.save(target_file)
+      nil
     else
       image.save_data(format: out_format, quality: quality)
     end

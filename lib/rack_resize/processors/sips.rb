@@ -1,4 +1,5 @@
 require "open3"
+require "tempfile"
 
 class RackResize::Processors::Sips
 
@@ -13,7 +14,9 @@ class RackResize::Processors::Sips
     if target_width && target_height
       src_w, src_h = sips_dimensions(source_file)
       if cover
-        if target_width.to_f / src_w >= target_height.to_f / src_h
+        if src_w.nil? || src_h.nil?
+          args += ["--resampleWidth", target_width.to_i.to_s]
+        elsif target_width.to_f / src_w >= target_height.to_f / src_h
           args += ["--resampleWidth", target_width.to_i.to_s]
         else
           args += ["--resampleHeight", target_height.to_i.to_s]

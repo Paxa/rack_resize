@@ -22,6 +22,7 @@ class RackResize::Processors::MiniMagick
 
     if target_file
       image.call(destination: target_file)
+      nil
     else
       begin
         tmp_file = image.call

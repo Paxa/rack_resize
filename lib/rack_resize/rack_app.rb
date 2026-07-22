@@ -48,7 +48,7 @@ class RackResize::RackApp
       return error_resp("invalid file path")
     end
     unless asset_file.exist?
-      @processing.logger.info("RackResize::RackApp - File path fond #{asset_path} => #{asset_file}")
+      @processing.logger.info("RackResize::RackApp - File path not found #{asset_path} => #{asset_file}")
       return error_resp("file not exists on a server")
     end
 

@@ -64,7 +64,7 @@ class RackResize::Configuration
                             when :sips        then RackResize::Processors::Sips.new
                             when :imlib2      then RackResize::Processors::Imlib2.new
                             else
-                              raise "RackResize - Unknow image processor #{@processor.inspect}"
+                              raise "RackResize - Unknown image processor #{@processor.inspect}"
                             end
   end
 

@@ -1,4 +1,5 @@
 require 'digest'
+require 'fileutils'
 
 class RackResize::Processing
   attr_reader :config
@@ -19,7 +20,12 @@ class RackResize::Processing
       end
 
       logger.info("Serving cached file #{tmp_file_name}")
-      return StringIO.new(File.open(tmp_file_name.to_s, "rb", &:read))
+      begin
+        return StringIO.new(File.open(tmp_file_name.to_s, "rb", &:read))
+      rescue Errno::ENOENT
+        process_file(req_params:, source_file:, target_file: tmp_file_name.to_s)
+        return StringIO.new(File.open(tmp_file_name.to_s, "rb", &:read))
+      end
     else
       file_content = process_file(req_params:, source_file:, target_file: nil)
       return StringIO.new(file_content)
@@ -28,7 +34,7 @@ class RackResize::Processing
 
   def process_file(source_file:, req_params:, target_file: nil)
     dpr = req_params[:dpr]&.to_f || 1.0
-    dpr = [[dpr, 0.1].max, 10.0].min
+    dpr = dpr.clamp(0.1, 10.0)
 
     max = config.max_dimension.to_f
     target_width  = (req_params[:w]&.to_i || req_params[:width]&.to_i)&.*(dpr)&.clamp(1, max)
@@ -36,7 +42,7 @@ class RackResize::Processing
 
     fit     = req_params[:fit]
     format  = req_params[:format].then { |f| f == 'auto' ? nil : f }
-    quality = req_params[:quality]&.to_i
+    quality = req_params[:quality]&.to_i&.clamp(1, 100)
 
     start_time = Time.now
     begin
@@ -56,7 +62,7 @@ class RackResize::Processing
   private
 
   def output_extension(source_file, format)
-    return File.extname(source_file) if format.nil? || format == 'auto'
+    return File.extname(source_file) if format.nil?
     ".#{format.to_s.downcase}"
   end
 end
