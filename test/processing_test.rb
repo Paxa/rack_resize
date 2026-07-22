@@ -15,9 +15,9 @@ describe RackResize::Processing do
 
   IMAGE_MAGIC_DETECTED      = system('magick -version > /dev/null 2>&1') || system('convert -version > /dev/null 2>&1') || false
   IMAGE_MAGIC_HEIC_DETECTED = system("convert samples/sample1.heic /dev/null")
-  VIPS_HEIC_DETECTED        = system("vips thumbnail samples/sample.heic /tmp/sample_.heic 10")
   IMAGE_MAGIC_AVIF_DETECTED = IMAGE_MAGIC_DETECTED && system("magick identify samples/sample.avif > /dev/null 2>&1")
-  VIPS_AVIF_DETECTED        = system("vips thumbnail samples/sample.avif /tmp/sample_avif_check.jpg 10 > /dev/null 2>&1")
+  VIPS_HEIC_DETECTED        = system("vips thumbnail samples/sample.heic /tmp/sample_heic_check.heic 10 > /dev/null 2>&1")
+  VIPS_AVIF_DETECTED        = system("vips thumbnail samples/sample.avif /tmp/sample_avif_check.avif 10 > /dev/null 2>&1")
 
   before { @tmpdir = Dir.mktmpdir('rack_resize_processing_test') }
   after  { FileUtils.rm_rf(@tmpdir) }
