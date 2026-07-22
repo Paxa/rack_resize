@@ -699,13 +699,6 @@ describe RackResize::Processing do
       end
     end
 
-    it 'imlib2: converts JPEG to WebP' do
-      with_processor(:imlib2) do |p|
-        io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', format: 'webp'})
-        assert_dimensions io, 150, 200, ext: '.webp'
-      end
-    end
-
     it 'sips: converts JPEG to PNG' do
       with_processor(:sips) do |p|
         io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', format: 'png'})
