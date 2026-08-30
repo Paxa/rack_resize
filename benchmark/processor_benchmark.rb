@@ -24,6 +24,7 @@ PROCESSOR_CLASSES = {
   vips:        RackResize::Processors::Vips,
   mini_magick: RackResize::Processors::MiniMagick,
   imlib2:      RackResize::Processors::Imlib2,
+  bun_image:   RackResize::Processors::BunImage,
 }.freeze
 
 puts "Loading processors..."

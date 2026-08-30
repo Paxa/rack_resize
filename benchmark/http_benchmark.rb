@@ -28,7 +28,7 @@ NULL_LOGGER  = Logger.new(IO::NULL)
 available_apps = {}
 
 puts "Loading processors..."
-%i[sips vips mini_magick imlib2].each do |name|
+%i[sips vips mini_magick imlib2 bun_image].each do |name|
   begin
     app = RackResize::RackApp.new(
       processor:      name,

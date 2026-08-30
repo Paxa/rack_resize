@@ -94,7 +94,7 @@ Supported by: `vips`, `mini_magick`. Accepted but ignored by `sips` and `imlib2`
 ```ruby
 RackResize.configure do |config|
   config.assets_folders     = { assets: Rails.root.join('app', 'assets', 'images') }
-  config.processor          = :sips / :vips / :mini_magick / :imlib2
+  config.processor          = :sips / :vips / :mini_magick / :imlib2 / :bun_image
   config.default_quality    = 95
   config.save_resized       = false
   config.cache_folder       = Rails.root.join('tmp', 'rack_resize_cache') # used if save_resized enabled
@@ -167,19 +167,31 @@ gem "rszr"
 
 </td>
 </tr>
+<tr>
+<td>bun_image</td>
+<td><code>processor: :bun_image</code></td>
+<td>
+
+Bun ≥ 1.3.14 — `brew install oven-sh/bun/bun`
+
+</td>
+<td>none (shells out to <code>bun</code>)</td>
+</tr>
 </table>
+
+Note: <code>fit=cover</code>/<code>fit=crop</code> falls back to stretch (fill) with <code>bun_image</code> — Bun.Image has no crop yet.
 
 ### Supported Image Formats:
 
-| Format | sips | mini_magick | vips | imlib2 |
-|--------|:----:|:-----------:|:----:|:------:|
-| JPEG   | ✅   | ✅          | ✅   | ✅     |
-| PNG    | ✅   | ✅          | ✅   | ✅     |
-| GIF    | ✅   | ✅          | ✅   | ✅     |
-| WebP   | ❌   | ✅ ¹        | ✅ ¹ | ❌     |
-| AVIF   | ✅ ² | ✅ ³        | ✅ ⁴ | ❌     |
-| HEIC   | ✅   | ✅ ³        | ✅ ⁴ | ❌     |
-| SVG    | ❌   | ✅ ⁵        | ✅ ⁶ | ❌     |
+| Format | sips | mini_magick | vips | imlib2 | bun_image |
+|--------|:----:|:-----------:|:----:|:------:|:---------:|
+| JPEG   | ✅   | ✅          | ✅   | ✅     | ✅        |
+| PNG    | ✅   | ✅          | ✅   | ✅     | ✅        |
+| GIF    | ✅   | ✅          | ✅   | ✅     | ❌        |
+| WebP   | ❌   | ✅ ¹        | ✅ ¹ | ❌     | ✅        |
+| AVIF   | ✅ ² | ✅ ³        | ✅ ⁴ | ❌     | ✅ ⁷      |
+| HEIC   | ✅   | ✅ ³        | ✅ ⁴ | ❌     | ✅ ⁷      |
+| SVG    | ❌   | ✅ ⁵        | ✅ ⁶ | ❌     | ❌        |
 
 ¹ Requires ImageMagick / libvips built with **libwebp** support (`brew install webp`)
 ² macOS 13 (Ventura) or later
@@ -187,6 +199,7 @@ gem "rszr"
 ⁴ Requires libvips built with **libheif** support (`brew install libheif`)
 ⁵ Requires **Inkscape** or **librsvg** (`brew install librsvg`)
 ⁶ Requires libvips built with **librsvg** support (`brew install librsvg`)
+⁷ AVIF/HEIC encode is macOS/Windows only in Bun.Image
 
 ### Performance Benchmarks:
 
