@@ -1,7 +1,7 @@
 require 'pathname'
 
 class RackResize::Configuration
-  PROCESSORS = %i[sips vips mini_magick imlib2].freeze
+  PROCESSORS = %i[sips vips mini_magick imlib2 bun_image].freeze
 
   attr_reader :processor, :assets_folders
   attr_accessor :save_resized, :default_quality, :cache_folder, :http_cache_max_age, :max_dimension, :logger
@@ -63,6 +63,7 @@ class RackResize::Configuration
                             when :vips        then RackResize::Processors::Vips.new
                             when :sips        then RackResize::Processors::Sips.new
                             when :imlib2      then RackResize::Processors::Imlib2.new
+                            when :bun_image   then RackResize::Processors::BunImage.new
                             else
                               raise "RackResize - Unknown image processor #{@processor.inspect}"
                             end

@@ -180,8 +180,27 @@
 
   <details class="section">
     <summary>
+      <span class="title">Input formats</span>
+      <span class="desc">Read jpeg, png, webp, avif, heic, svg — output as jpeg</span>
+      <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 8l5 5 5-5"/>
+      </svg>
+    </summary>
+    <div class="body">
+      <div class="url-example">/samples/image_1.jpeg?w=200
+/samples/sample.png?w=200
+/samples/sample.webp?w=200
+/samples/sample.avif?w=200
+/samples/sample.heic?w=200
+/samples/sample.svg?w=200</div>
+      <div class="grid" id="grid-inputs"></div>
+    </div>
+  </details>
+
+  <details class="section">
+    <summary>
       <span class="title">Output formats</span>
-      <span class="desc">Convert to jpeg, png, webp, avif</span>
+      <span class="desc">Convert to jpeg, png, webp, avif, heic</span>
       <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M5 8l5 5 5-5"/>
       </svg>
@@ -189,6 +208,7 @@
     <div class="body">
       <div class="url-example">/samples/image_1.jpeg?w=200&amp;format=webp
 /samples/image_1.jpeg?w=200&amp;f=avif
+/samples/image_1.jpeg?w=200&amp;f=heic
 /samples/sample.png?w=200&amp;f=jpeg</div>
       <div class="grid" id="grid-formats"></div>
     </div>
@@ -277,12 +297,24 @@
       img(`/samples/${f}?w=280&q=${q}`, `q=${q}`)
     )));
 
+    // Input formats
+    const INPUT_TESTS = [
+      ['/samples/image_1.jpeg?w=200', 'jpeg'],
+      ['/samples/sample.png?w=200',   'png'],
+      ['/samples/sample.webp?w=200',  'webp'],
+      ['/samples/sample.avif?w=200',  'avif'],
+      ['/samples/sample.heic?w=200',  'heic'],
+      ['/samples/sample.svg?w=200',   'svg'],
+    ];
+    fill('grid-inputs', INPUT_TESTS.map(([src, label]) => img(src, label)));
+
     // Output formats
     const FORMAT_TESTS = [
       ['/samples/image_1.jpeg?w=200&format=jpeg',   'image_1 → jpeg'],
       ['/samples/image_1.jpeg?w=200&f=png',         'image_1 → png'],
       ['/samples/image_1.jpeg?w=200&f=webp',        'image_1 → webp'],
       ['/samples/image_1.jpeg?w=200&f=avif',        'image_1 → avif'],
+      ['/samples/image_1.jpeg?w=200&f=heic',        'image_1 → heic'],
       ['/samples/sample.png?w=200&f=jpeg&bg=white', 'sample.png → jpeg'],
       ['/samples/sample.webp?w=200&f=png',          'sample.webp → png'],
     ];

@@ -13,6 +13,7 @@ describe RackResize::Processing do
   SAMPLE_WEBP  = SAMPLES_DIR.join('sample.webp')  # 550x368
   SAMPLE_AVIF  = SAMPLES_DIR.join('sample.avif')  # 900x1200
 
+  BUN_DETECTED              = system('bun --version > /dev/null 2>&1')
   IMAGE_MAGIC_DETECTED      = system('magick -version > /dev/null 2>&1') || system('convert -version > /dev/null 2>&1') || false
   IMAGE_MAGIC_HEIC_DETECTED = system("convert samples/sample.heic /tmp/sample_heic_check_.heic")
   IMAGE_MAGIC_AVIF_DETECTED = IMAGE_MAGIC_DETECTED && system("magick identify samples/sample.avif > /dev/null 2>&1")
@@ -218,6 +219,40 @@ describe RackResize::Processing do
         end
       end
     end
+
+    describe 'bun_image' do
+      it 'resizes by width' do
+        with_processor(:bun_image) do |p|
+          assert_dimensions p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150'}), 150, 200
+        end
+      end
+
+      it 'resizes by height' do
+        with_processor(:bun_image) do |p|
+          assert_dimensions p.process!(source_file: SAMPLE_JPEG, req_params: {height: '200'}), 150, 200
+        end
+      end
+
+      it 'fits within box when width constrains' do
+        with_processor(:bun_image) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', height: '400'})
+          assert_dimensions io, 150, 200
+        end
+      end
+
+      it 'fits within box when height constrains' do
+        with_processor(:bun_image) do |p|
+          io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '300', height: '200'})
+          assert_dimensions io, 150, 200
+        end
+      end
+
+      it 'preserves original dimensions with no params' do
+        with_processor(:bun_image) do |p|
+          assert_dimensions p.process!(source_file: SAMPLE_JPEG, req_params: {}), 300, 400
+        end
+      end
+    end
   end
 
   # -------------------------------------------------------------------------
@@ -328,6 +363,34 @@ describe RackResize::Processing do
 
       it 'fits within box when height constrains' do
         with_processor(:imlib2) do |p|
+          io = p.process!(source_file: SAMPLE_PNG, req_params: {width: '96', height: '52'})
+          assert_dimensions io, 48, 52, ext: '.png'
+        end
+      end
+    end
+
+    describe 'bun_image' do
+      it 'resizes by width' do
+        with_processor(:bun_image) do |p|
+          assert_dimensions p.process!(source_file: SAMPLE_PNG, req_params: {width: '48'}), 48, 52, ext: '.png'
+        end
+      end
+
+      it 'resizes by height' do
+        with_processor(:bun_image) do |p|
+          assert_dimensions p.process!(source_file: SAMPLE_PNG, req_params: {height: '52'}), 48, 52, ext: '.png'
+        end
+      end
+
+      it 'fits within box when width constrains' do
+        with_processor(:bun_image) do |p|
+          io = p.process!(source_file: SAMPLE_PNG, req_params: {width: '48', height: '104'})
+          assert_dimensions io, 48, 52, ext: '.png'
+        end
+      end
+
+      it 'fits within box when height constrains' do
+        with_processor(:bun_image) do |p|
           io = p.process!(source_file: SAMPLE_PNG, req_params: {width: '96', height: '52'})
           assert_dimensions io, 48, 52, ext: '.png'
         end
@@ -804,6 +867,44 @@ describe RackResize::Processing do
         end
       end
     end
+
+    describe 'bun_image' do
+      it 'resizes by width' do
+        with_processor(:bun_image) do |p|
+          assert_dimensions p.process!(source_file: SAMPLE_WEBP, req_params: {width: '275'}), 275, 184, ext: '.webp'
+        end
+      end
+
+      it 'resizes by height' do
+        with_processor(:bun_image) do |p|
+          assert_dimensions p.process!(source_file: SAMPLE_WEBP, req_params: {height: '184'}), 275, 184, ext: '.webp'
+        end
+      end
+    end
+  end
+
+  describe 'bun_image extras' do
+    it 'converts JPEG to WebP' do
+      with_processor(:bun_image) do |p|
+        io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', format: 'webp'})
+        assert_dimensions io, 150, 200, ext: '.webp'
+      end
+    end
+
+    it 'converts JPEG to PNG' do
+      with_processor(:bun_image) do |p|
+        io = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', format: 'png'})
+        assert_dimensions io, 150, 200, ext: '.png'
+      end
+    end
+
+    it 'per-request quality overrides default' do
+      with_processor(:bun_image) do |p|
+        hi = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', quality: '95'})
+        lo = p.process!(source_file: SAMPLE_JPEG, req_params: {width: '150', quality: '10'})
+        assert_operator lo.size, :<, hi.size
+      end
+    end
   end
 
   private
@@ -832,6 +933,8 @@ describe RackResize::Processing do
       skip 'sips is macOS-only' unless RUBY_PLATFORM.include?('darwin')
     when :mini_magick
       skip 'ImageMagick not found' unless IMAGE_MAGIC_DETECTED
+    when :bun_image
+      skip 'bun not found' unless BUN_DETECTED
     when :vips
       begin
         require 'vips'

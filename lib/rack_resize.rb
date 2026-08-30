@@ -9,6 +9,7 @@ module RackResize
     autoload :Vips,       "#{__dir__}/rack_resize/processors/vips"
     autoload :MiniMagick, "#{__dir__}/rack_resize/processors/mini_magick"
     autoload :Imlib2,     "#{__dir__}/rack_resize/processors/imlib2"
+    autoload :BunImage,   "#{__dir__}/rack_resize/processors/bun_image"
   end
 
   module InputParsers
