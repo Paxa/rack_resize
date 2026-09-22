@@ -125,6 +125,13 @@ describe RackResize::RackApp do
         status, _, _ = @app.call(Rack::MockRequest.env_for('/cdn-cgi/image/width=100/assets/photo-1a2b3c4d.jpg'))
         assert_equal 200, status
       end
+
+      it 'processes imgproxy formatted requests' do
+        status, headers, _ = @app.call(Rack::MockRequest.env_for('/insecure/rs:fill:200:150/q:85/f:webp/plain/local:///assets/photo.jpg'))
+        assert_equal 200, status
+        assert_equal 'image/webp', headers['content-type']
+        assert_equal 'processed image data'.bytesize.to_s, headers['content-length']
+      end
     end
 
     describe 'custom cf_path_prefix' do

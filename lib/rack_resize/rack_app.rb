@@ -20,6 +20,7 @@ class RackResize::RackApp
 
     result = RackResize::InputParsers::Cloudflare.parse_input(fullpath, cf_path_prefix: @cf_path_prefix)
     result = RackResize::InputParsers::QueryString.parse_input(fullpath, request.query_string) unless result[:route_matched]
+    result = RackResize::InputParsers::Imgproxy.parse_input(fullpath) unless result[:route_matched]
     result => {route_matched:, req_params:, asset_path:}
 
     return @app.call(env) unless route_matched

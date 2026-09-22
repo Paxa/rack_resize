@@ -15,6 +15,7 @@ module RackResize
   module InputParsers
     autoload :Cloudflare,  "#{__dir__}/rack_resize/input_parsers/cloudflare"
     autoload :QueryString, "#{__dir__}/rack_resize/input_parsers/query_string"
+    autoload :Imgproxy,    "#{__dir__}/rack_resize/input_parsers/imgproxy"
   end
 
   class << self

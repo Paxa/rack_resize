@@ -27,6 +27,11 @@ Fastly / bunny.net format (query string params):
 ```
 /assets/pets/dog.jpg?width=300&height=200&fit=cover&format=webp&quality=85
 ```
+Imgproxy format:
+```
+/insecure/rs:fill:400:300/q:85/f:webp/plain/local:///assets/pets/dog.jpg
+/insecure/rs:fit:200:150/plain/local:///assets/banner.jpg@webp
+```
 
 ### Supported Parameters:
 
