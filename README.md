@@ -35,15 +35,15 @@ Imgproxy format:
 
 ### Supported Parameters:
 
-| Parameter  | Shortcut | Type | Description |
-|------------|----------|------|-------------|
-| `width`    | `w`      | integer | Target width in pixels. Scales proportionally if `height` is omitted. |
-| `height`   | `h`      | integer | Target height in pixels. Scales proportionally if `width` is omitted. |
-| `fit`      | —        | string  | Resize mode: `contain` (default), `cover`, `crop`. See below. |
-| `format`   | `f`      | string  | Output format: `jpeg`, `png`, `webp`, `avif`, `gif`. Use `auto` to keep original. |
-| `quality`  | `q`      | integer (1–100) | Compression quality. Defaults to `default_quality` config value (95). |
-| `dpr`      | —        | float (0.1–10) | Device pixel ratio. Multiplies `width` and `height` before processing. |
-| `bg-color` | `bg`     | color   | Background color for flattening transparency. Also aliased as `background`. See formats below. |
+| Parameter  | Shortcut | Imgproxy Option | Type | Description |
+|------------|----------|-----------------|------|-------------|
+| `width`    | `w`      | `w:<val>` or in `rs:<mode>:<w>:<h>` | integer | Target width in pixels. Scales proportionally if `height` is omitted. |
+| `height`   | `h`      | `h:<val>` or in `rs:<mode>:<w>:<h>` | integer | Target height in pixels. Scales proportionally if `width` is omitted. |
+| `fit`      | —        | `rs:fill` (cover), `rs:fit` (contain) | string  | Resize mode: `contain` (default), `cover`, `crop`. See below. |
+| `format`   | `f`      | `f:<fmt>` or `@<fmt>` suffix | string  | Output format: `jpeg`, `png`, `webp`, `avif`, `gif`. Use `auto` to keep original. |
+| `quality`  | `q`      | `q:<val>`       | integer (1–100) | Compression quality. Defaults to `default_quality` config value (95). |
+| `dpr`      | —        | `dpr:<val>`     | float (0.1–10) | Device pixel ratio. Multiplies `width` and `height` before processing. |
+| `bg-color` | `bg`     | `bg:<color>`    | color   | Background color for flattening transparency. Also aliased as `background`. See formats below. |
 
 **Background color formats:**
 - CSS named color: `white`, `red`, `cornflowerblue` (all 148 CSS colors supported)
@@ -56,8 +56,8 @@ Imgproxy format:
 Supported by: `vips`, `mini_magick`. Accepted but ignored by `sips` and `imlib2`.
 
 **Fit modes:**
-- `contain` — resizes to fit within the given box, preserving aspect ratio (default)
-- `cover` / `crop` — resizes and center-crops to fill the exact box
+- `contain` (`rs:fit`) — resizes to fit within the given box, preserving aspect ratio (default)
+- `cover` / `crop` (`rs:fill`) — resizes and center-crops to fill the exact box
 
 **Example URLs (query string format):**
 ```
@@ -94,6 +94,30 @@ Supported by: `vips`, `mini_magick`. Accepted but ignored by `sips` and `imlib2`
 /cdn-cgi/image/width=400,format=avif,quality=80/samples/image_1.jpeg
 ```
 
+**Example URLs (Imgproxy format):**
+```
+# Resize to width and height with cover crop (rs:fill)
+/insecure/rs:fill:400:300/plain/local:///samples/image_1.jpeg
+
+# Resize to fit within 400×300 box (rs:fit)
+/insecure/rs:fit:400:300/plain/local:///samples/image_1.jpeg
+
+# Convert format and adjust quality
+/insecure/rs:fill:400:300/q:85/f:webp/plain/local:///samples/image_1.jpeg
+
+# Specify format via extension suffix (@webp)
+/insecure/rs:fit:200:150/plain/samples/banner.jpg@webp
+
+# Using separate width, height, and DPR
+/insecure/w:400/h:300/dpr:2/plain/samples/image_1.jpeg
+
+# Flatten transparency with background color
+/insecure/rs:fill:200:200/bg:white/plain/samples/logo.png
+
+# Rails fingerprint stripping (fingerprinted URL automatically resolves to original file)
+/insecure/w:200/plain/assets/photo-1a2b3c4d.jpg
+```
+
 ### Configuration:
 
 ```ruby
@@ -106,6 +130,21 @@ RackResize.configure do |config|
   config.http_cache_max_age = 86400
 end
 ```
+
+### Development vs. Production Architecture:
+
+`rack_resize` lets you write standard CDN / imgproxy URLs in your application code without needing external services running in development:
+
+```
+[ Local Development ]
+Browser Request  -->  Rails / Rack App  -->  RackResize Middleware  -->  Ruby Processor (:vips, :mini_magick, etc.)
+
+[ Production ]
+Browser Request  -->  Nginx / CDN Cache  -->  imgproxy (Go service)  -->  Original Image Storage (S3 / disk)
+```
+
+- **In Development**: Include `rack_resize` in your `:development` Gemfile group. It intercepts `/insecure/...`, `/cdn-cgi/image/...`, or query string parameters, processes images on the fly in Ruby, and serves them immediately.
+- **In Production**: Route image paths directly at your reverse proxy (e.g. Nginx with `proxy_cache`) to your production `imgproxy` container or CDN edge, keeping your web application servers focused on dynamic application traffic.
 
 ### Supported Processing Backends:
 
