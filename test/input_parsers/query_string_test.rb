@@ -20,6 +20,13 @@ describe RackResize::InputParsers::QueryString do
       result = subject.parse_input('/assets/photo.jpg', nil)
       assert_equal false, result[:route_matched]
     end
+
+    it 'returns route_matched: false for non-image paths even with resize params' do
+      assert_equal false, subject.parse_input('/', 'q=search')[:route_matched]
+      assert_equal false, subject.parse_input('/admin/users', 'q=alice')[:route_matched]
+      assert_equal false, subject.parse_input('/items', 'width=200')[:route_matched]
+      assert_equal false, subject.parse_input('/page.html', 'w=300')[:route_matched]
+    end
   end
 
   describe 'Fastly / bunny.net format (query string params)' do
@@ -181,6 +188,12 @@ describe RackResize::InputParsers::QueryString do
       status, _, body = @app.call(Rack::MockRequest.env_for('/cdn-cgi/image/width=100/assets/photo.jpg?width=200'))
       assert_equal 200, status
       refute_equal ['upstream'], body
+    end
+
+    it 'passes through when query param q= is present on a non-image path (e.g. search)' do
+      status, _, body = @app.call(Rack::MockRequest.env_for('/?q=search'))
+      assert_equal 200, status
+      assert_equal ['upstream'], body
     end
   end
 end

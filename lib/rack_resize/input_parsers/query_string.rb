@@ -8,11 +8,15 @@ module RackResize::InputParsers::QueryString
   #
   # Shortcuts: f=format, q=quality
 
+  IMAGE_EXTENSIONS = %w[.jpg .jpeg .png .webp .gif .avif .svg .heic].freeze
   CANONICAL_PARAMS = %w[width height quality dpr format fit bg-color background].freeze
   PARAM_ALIASES    = { 'f' => :format, 'q' => :quality, 'h' => :height, 'w' => :width, 'bg' => :'bg-color' }.freeze
   RESIZE_PARAMS    = (CANONICAL_PARAMS + PARAM_ALIASES.keys).freeze
 
   def parse_input(fullpath, query_string)
+    ext = File.extname(fullpath.to_s.split('?').first.to_s).downcase
+    return { route_matched: false, req_params: nil, asset_path: nil } unless IMAGE_EXTENSIONS.include?(ext)
+
     params = Rack::Utils.parse_query(query_string.to_s)
 
     unless params.keys.any? { |k| RESIZE_PARAMS.include?(k) }
