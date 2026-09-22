@@ -7,7 +7,7 @@ module RackResize::InputParsers::Imgproxy
   # /my-sig-123/w:400/h:300/q:80/plain/assets/photo.png
   # /insecure/plain/local:///assets/photo.jpg@avif
 
-  REGEX = %r{\A/(?<signature>[^/]+)/(?:(?<options>(?:[a-z_]+:[^/]+/)+))?plain/(?:local:///?|https?://[^/]+/)?(?<path>[^@\s]+?)(?:@(?<format>\w+))?\z}i
+  REGEX = %r{\A/(?<signature>[^/]+)/(?:(?<options>(?:[a-z_]+:[^/]+/)*))plain/(?:local:///?|https?://[^/]+/)?(?<path>[^@\s]+?)(?:@(?<format>\w+))?\z}i
 
   def parse_input(fullpath)
     match = fullpath.to_s.match(REGEX)
